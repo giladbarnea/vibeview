@@ -16,6 +16,10 @@ interface TrackRowProps {
   onSelect: (index: number) => void;
   open: boolean;
   onToggle: (key: string) => void;
+  /** Whether the find bar's query occurs in this prompt. */
+  matched: boolean;
+  /** Whether the find bar is on this row. */
+  current: boolean;
   /** The prompt's full text, shown as markdown when the row is open. */
   promptText: string | undefined;
   /** Estimated tokens of the prompt's own text; undefined when the exchange has no prompt. */
@@ -62,6 +66,8 @@ export const TrackRow = memo(function TrackRow({
   onSelect,
   open,
   onToggle,
+  matched,
+  current,
   promptText,
   promptTokens,
   density,
@@ -83,6 +89,7 @@ export const TrackRow = memo(function TrackRow({
   return (
     <div
       ref={rowRef}
+      data-row-key={rowKey}
       role="button"
       tabIndex={0}
       onClick={selectAndToggle}
@@ -90,7 +97,7 @@ export const TrackRow = memo(function TrackRow({
       style={selected ? { boxShadow: 'inset 3px 0 0 var(--primary)' } : undefined}
       className={`${ROW_LAYOUT} w-full cursor-pointer border-b border-border/60 text-left hover:bg-primary/5 ${
         density === 'compact' ? 'py-2' : 'py-3'
-      } ${selected ? 'bg-primary/10' : 'bg-secondary/50'}`}
+      } ${matched ? 'bg-amber-400/15' : selected ? 'bg-primary/10' : 'bg-secondary/50'} ${current ? 'ring-1 ring-inset ring-amber-400' : ''}`}
     >
       <span className={`${COLUMN_CLASS.number} font-mono text-[10px] text-muted-fg`}>
         {messageNumber}

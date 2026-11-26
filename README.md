@@ -2,7 +2,7 @@
 
 A local CLI tool for browsing your Claude Code sessions in a clean, read-only web interface.
 
-> **This fork** (of [driangle/vibeview](https://github.com/driangle/vibeview)) also views [Pi](https://pi.dev) sessions. Its session page is the Timeline table alone: prompts and assistant messages as rows, tool calls as expandable `input -> output` sub-rows, per-row token estimates, and collapsible context-window boundaries with a jump list. The session page is a snapshot taken when the page loads; reload the page to see changes to the file. See [Viewing Pi sessions](#viewing-pi-sessions).
+> **This fork** (of [driangle/vibeview](https://github.com/driangle/vibeview)) also views [Pi](https://pi.dev) sessions. Its session page is the Timeline table alone: prompts and assistant messages as rows, tool calls as expandable `input -> output` sub-rows, per-row token estimates, collapsible context-window boundaries with a jump list, and a find bar (Cmd/Ctrl+F) that also searches inside closed rows and tool calls. The session page is a snapshot taken when the page loads; reload the page to see changes to the file. See [Viewing Pi sessions](#viewing-pi-sessions).
 
 [Documentation](https://driangle.github.io/vibeview/)
 

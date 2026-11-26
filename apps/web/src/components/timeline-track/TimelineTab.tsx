@@ -1,6 +1,8 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { Exchange, TimelineResponse } from '../../types';
 import { buildTrackItems } from './trackItems';
+import { NO_MATCHES, buildSearchIndex, findMatches } from './search';
+import { SearchBar } from './SearchBar';
 import { TimelineTrack } from './TimelineTrack';
 import { useTimelineKeyboard } from './useTimelineKeyboard';
 import type { TimelineController } from './useTimeline';
@@ -58,6 +60,66 @@ export function TimelineTab({
     () => buildTrackItems(visible, messages ?? [], toolResults ?? new Map()),
     [visible, messages, toolResults],
   );
+  const [collapsedWindows, setCollapsedWindows] = useState<Set<number>>(new Set());
+  const toggleWindow = useCallback(
+    (windowNumber: number) =>
+      setCollapsedWindows((previous) => {
+        const next = new Set(previous);
+        if (!next.delete(windowNumber)) next.add(windowNumber);
+        return next;
+      }),
+    [],
+  );
+
+  // Find: Cmd/Ctrl+F opens the bar; the query applies 150ms after typing stops.
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [focusSignal, setFocusSignal] = useState(0);
+  const [queryInput, setQueryInput] = useState('');
+  const [query, setQuery] = useState('');
+  const [matchPosition, setMatchPosition] = useState(0);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setQuery(queryInput);
+      setMatchPosition(0);
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [queryInput]);
+  useEffect(() => {
+    const openOnFind = (event: KeyboardEvent) => {
+      if (!(event.metaKey || event.ctrlKey) || event.key !== 'f') return;
+      event.preventDefault();
+      setSearchOpen(true);
+      setFocusSignal((signal) => signal + 1);
+    };
+    window.addEventListener('keydown', openOnFind);
+    return () => window.removeEventListener('keydown', openOnFind);
+  }, []);
+  const closeSearch = () => {
+    setSearchOpen(false);
+    setQueryInput('');
+  };
+  const searchIndex = useMemo(() => buildSearchIndex(items), [items]);
+  const matches = useMemo(() => (query ? findMatches(searchIndex, query) : NO_MATCHES), [searchIndex, query]);
+  const currentMatchKey = matches.rowKeys[matchPosition];
+  const stepMatch = (delta: number) =>
+    setMatchPosition((position) => (position + delta + matches.rowKeys.length) % matches.rowKeys.length);
+
+  // Reveal the current match: expand its window, open its row, and scroll it to the middle.
+  useEffect(() => {
+    if (currentMatchKey === undefined) return;
+    const item = items.find((candidate) => candidate.key === currentMatchKey);
+    if (!item) return;
+    setCollapsedWindows((previous) => {
+      const next = new Set(previous);
+      next.delete(item.windowNumber);
+      return next;
+    });
+    setOpenSegments((previous) => new Set(previous).add(currentMatchKey));
+    requestAnimationFrame(() =>
+      document.querySelector(`[data-row-key="${currentMatchKey}"]`)?.scrollIntoView({ block: 'center' }),
+    );
+  }, [currentMatchKey, items]);
+
   /** Opens or closes a prompt row together with the assistant rows up to the next prompt. */
   const setExchangeOpen = (index: number, open: boolean) => {
     const start = items.findIndex((item) => item.kind === 'prompt' && item.exchange.index === index);
@@ -87,7 +149,18 @@ export function TimelineTab({
   });
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <div className="relative flex min-h-0 flex-1 flex-col">
+      {searchOpen && (
+        <SearchBar
+          value={queryInput}
+          onChange={setQueryInput}
+          position={matches.rowKeys.length === 0 ? -1 : matchPosition}
+          total={matches.rowKeys.length}
+          onStep={stepMatch}
+          onClose={closeSearch}
+          focusSignal={focusSignal}
+        />
+      )}
       <div className="flex min-h-0 flex-1">
         <TimelineTrack
           items={items}
@@ -98,6 +171,10 @@ export function TimelineTab({
           onReset={reset}
           openSegments={openSegments}
           onToggleSegment={toggleSegment}
+          collapsedWindows={collapsedWindows}
+          onToggleWindow={toggleWindow}
+          matches={matches}
+          currentMatchKey={currentMatchKey}
         />
       </div>
     </div>

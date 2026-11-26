@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useRef } from 'react';
 import { TrackColumnHeader } from './TrackColumnHeader';
 import { TrackRow, type Density } from './TrackRow';
 import { TrackEmptyState } from './TrackEmptyState';
@@ -6,6 +6,9 @@ import { DateDivider } from './DateDivider';
 import { AssistantRow, WindowDivider } from './ExchangeTree';
 import { WindowToc } from './WindowToc';
 import type { TrackItem } from './trackItems';
+import type { SearchMatches } from './search';
+
+const NO_KEYS = new Set<string>();
 
 interface TimelineTrackProps {
   /** The track's rows, built by {@link buildTrackItems}. */
@@ -22,6 +25,13 @@ interface TimelineTrackProps {
   /** Keys of the prompt and assistant rows that are open. */
   openSegments: Set<string>;
   onToggleSegment: (key: string) => void;
+  /** Numbers of the context windows whose rows are hidden. */
+  collapsedWindows: Set<number>;
+  onToggleWindow: (windowNumber: number) => void;
+  /** The find bar's matches, highlighted in the rows. */
+  matches: SearchMatches;
+  /** The row the find bar is on, outlined. */
+  currentMatchKey: string | undefined;
 }
 
 /**
@@ -38,19 +48,14 @@ export function TimelineTrack({
   onReset,
   openSegments,
   onToggleSegment,
+  collapsedWindows,
+  onToggleWindow,
+  matches,
+  currentMatchKey,
 }: TimelineTrackProps) {
   const windowCount = items.filter((item) => item.kind === 'boundary').length;
 
-  const [collapsedWindows, setCollapsedWindows] = useState<Set<number>>(new Set());
-  const toggleWindow = useCallback(
-    (windowNumber: number) =>
-      setCollapsedWindows((previous) => {
-        const next = new Set(previous);
-        if (!next.delete(windowNumber)) next.add(windowNumber);
-        return next;
-      }),
-    [],
-  );
+  const matchedRows = new Set(matches.rowKeys);
   const shown = items.filter((item) => item.kind === 'boundary' || !collapsedWindows.has(item.windowNumber));
 
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -69,7 +74,7 @@ export function TimelineTrack({
             contextTokens={item.contextTokens}
             windowType={item.windowType}
             collapsed={collapsedWindows.has(item.windowNumber)}
-            onToggle={toggleWindow}
+            onToggle={onToggleWindow}
           />
         );
       case 'day':
@@ -85,6 +90,8 @@ export function TimelineTrack({
             onSelect={onSelectIndex}
             open={openSegments.has(item.key)}
             onToggle={onToggleSegment}
+            matched={matchedRows.has(item.key)}
+            current={currentMatchKey === item.key}
             promptText={item.promptText}
             promptTokens={item.promptTokens}
             density={density}
@@ -98,6 +105,9 @@ export function TimelineTrack({
             messageNumber={item.messageNumber}
             open={openSegments.has(item.key)}
             onToggle={onToggleSegment}
+            matched={matchedRows.has(item.key)}
+            current={currentMatchKey === item.key}
+            matchingNodeKeys={matchedRows.has(item.key) ? matches.nodeKeys : NO_KEYS}
           />
         );
     }

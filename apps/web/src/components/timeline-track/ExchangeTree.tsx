@@ -89,12 +89,20 @@ function InputOutputPreview({ input, output }: { input: string; output: string }
   );
 }
 
-function TreeRow({ node, depth }: { node: TreeNode; depth: number }) {
+function TreeRow({
+  node,
+  depth,
+  matchingNodeKeys,
+}: {
+  node: TreeNode;
+  depth: number;
+  matchingNodeKeys: Set<string>;
+}) {
   const [open, setOpen] = useState(false);
   let expansion: ReactNode = null;
   if (open && node.children)
     expansion = node.children.map((child) => (
-      <TreeRow key={child.key} node={child} depth={depth + 1} />
+      <TreeRow key={child.key} node={child} depth={depth + 1} matchingNodeKeys={matchingNodeKeys} />
     ));
   else if (open)
     expansion = (
@@ -110,7 +118,7 @@ function TreeRow({ node, depth }: { node: TreeNode; depth: number }) {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center gap-2 border-b border-border/30 bg-surface-dim/30 py-1 pr-8 text-left hover:bg-primary/5"
+        className={`flex w-full items-center gap-2 border-b border-border/30 py-1 pr-8 text-left hover:bg-primary/5 ${matchingNodeKeys.has(node.key) ? 'bg-amber-400/15' : 'bg-surface-dim/30'}`}
         style={{ paddingLeft: toolRowIndent(depth) }}
       >
         <span className={`flex-none font-mono text-[11px] ${node.isError ? 'text-destructive' : ''}`}>
@@ -140,11 +148,20 @@ export const AssistantRow = memo(function AssistantRow({
   messageNumber,
   open,
   onToggle,
+  matched,
+  current,
+  matchingNodeKeys,
 }: {
   segment: Segment;
   messageNumber: number | undefined;
   open: boolean;
   onToggle: (key: string) => void;
+  /** Whether the find bar's query occurs in this row or its tool calls. */
+  matched: boolean;
+  /** Whether the find bar is on this row. */
+  current: boolean;
+  /** The tool calls and inputs/outputs in this row that match the find bar's query. */
+  matchingNodeKeys: Set<string>;
 }) {
   const toolCount = segment.nodes.length;
   // Selecting text must not close the row.
@@ -155,10 +172,11 @@ export const AssistantRow = memo(function AssistantRow({
   return (
     <div>
       <div
+        data-row-key={segment.key}
         role="button"
         tabIndex={0}
         onClick={toggleUnlessSelecting}
-        className={`${ROW_LAYOUT} w-full cursor-pointer border-b border-border/60 py-2 text-left hover:bg-primary/5 ${open ? 'sticky top-0 z-[1] bg-[var(--color-card)]' : ''}`}
+        className={`${ROW_LAYOUT} w-full cursor-pointer border-b border-border/60 py-2 text-left hover:bg-primary/5 ${open ? 'sticky top-0 z-[1] bg-[var(--color-card)]' : matched ? 'bg-amber-400/15' : ''} ${current ? 'ring-1 ring-inset ring-amber-400' : ''}`}
       >
         <span className={`${COLUMN_CLASS.number} font-mono text-[10px] text-muted-fg`}>
           {messageNumber}
@@ -190,7 +208,10 @@ export const AssistantRow = memo(function AssistantRow({
           <span className={COLUMN_CLASS.tokens} />
         </div>
       )}
-      {open && segment.nodes.map((node) => <TreeRow key={node.key} node={node} depth={0} />)}
+      {open &&
+        segment.nodes.map((node) => (
+          <TreeRow key={node.key} node={node} depth={0} matchingNodeKeys={matchingNodeKeys} />
+        ))}
     </div>
   );
 });
