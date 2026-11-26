@@ -23,9 +23,15 @@ export const TREE_INDENT = 24;
 /** Width of a tool row's expand arrow (a 24px icon box) plus the 8px gap after it, in px. */
 const ARROW_WIDTH = 32;
 
-/** Left padding of a tool row at `depth` (0 = a tool call, 1 = its input/output); a tool call starts where its assistant row's text does. */
+/** The chevron glyph's blank margin inside its 24px icon box, in px. */
+const ARROW_BEARING = 9;
+
+/**
+ * Left padding of a tool row at `depth` (0 = a tool call, 1 = its input/output):
+ * the visible chevron of a tool call starts where its assistant row's text does.
+ */
 export function toolRowIndent(depth: number): number {
-  return PROMPT_COLUMN_LEFT + TREE_INDENT * (depth + 1);
+  return PROMPT_COLUMN_LEFT + TREE_INDENT * (depth + 1) - ARROW_BEARING;
 }
 
 /** Left margin of a tool row's opened content, aligned with the row's label. */
