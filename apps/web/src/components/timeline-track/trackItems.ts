@@ -40,6 +40,19 @@ function firstLine(text: string): string {
   return text.split('\n').find((line) => line.trim()) ?? '';
 }
 
+/**
+ * A tool output on one line: compact JSON when the output is JSON (its first
+ * line would be a bare `{` or `[`), otherwise its first non-blank line.
+ * Example: `'{\n  "ok": true\n}'` gives `'{"ok":true}'`.
+ */
+function outputPreview(output: string): string {
+  try {
+    return JSON.stringify(JSON.parse(output));
+  } catch {
+    return firstLine(output);
+  }
+}
+
 /** A tool input's first string argument (command, path, pattern…), or its JSON when it has none. */
 function inputPreview(input: ContentBlock['input']): string {
   const first = Object.values(input ?? {}).find((value) => typeof value === 'string');
@@ -51,13 +64,14 @@ function toolNode(key: string, block: ContentBlock, toolResults: Map<string, Con
   const input = JSON.stringify(block.input ?? {}, null, 2);
   const output = result ? resultText(result.content) : '(no result)';
   const preview = inputPreview(block.input);
+  const shortOutput = outputPreview(output);
   const inputTokens = estimateTokens(input);
   const outputTokens = estimateTokens(output);
   return {
     key,
     label: block.name ?? 'tool',
     preview,
-    outputPreview: firstLine(output),
+    outputPreview: shortOutput,
     body: input,
     tokens: inputTokens + outputTokens,
     isError: result?.is_error,
@@ -66,7 +80,7 @@ function toolNode(key: string, block: ContentBlock, toolResults: Map<string, Con
       {
         key: `${key}:out`,
         label: 'output',
-        preview: firstLine(output),
+        preview: shortOutput,
         body: output,
         tokens: outputTokens,
         isError: result?.is_error,
