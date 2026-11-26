@@ -2,7 +2,7 @@ import { memo, useState, type ReactNode } from 'react';
 import Markdown, { type Components } from 'react-markdown';
 import { TextSegment } from '../MessageContent';
 import type { Segment, TreeNode } from './trackItems';
-import { COLUMN_CLASS, ROW_LAYOUT } from './columns';
+import { COLUMN_CLASS, ROW_LAYOUT, TREE_INDENT, toolContentIndent, toolRowIndent } from './columns';
 import { formatTokenCount } from '../../utils';
 
 /** A context window's boundary line; clicking it collapses or expands the window's rows. */
@@ -98,7 +98,7 @@ function TreeRow({ node, depth }: { node: TreeNode; depth: number }) {
     ));
   else if (open)
     expansion = (
-      <div className="relative mb-1" style={{ marginLeft: depth * 20 + 52 }}>
+      <div className="relative mb-1" style={{ marginLeft: toolContentIndent(depth) }}>
         <pre className="max-h-[60vh] overflow-auto whitespace-pre-wrap break-words rounded bg-surface-dim/60 px-3 py-2 pr-8 font-mono text-[11px]">
           {node.body}
         </pre>
@@ -111,7 +111,7 @@ function TreeRow({ node, depth }: { node: TreeNode; depth: number }) {
         type="button"
         onClick={() => setOpen((v) => !v)}
         className="flex w-full items-center gap-2 border-b border-border/30 bg-surface-dim/30 py-1 pr-8 text-left hover:bg-primary/5"
-        style={{ paddingLeft: depth * 20 + 32 }}
+        style={{ paddingLeft: toolRowIndent(depth) }}
       >
         <span className="material-symbols-outlined flex-none text-[14px] text-muted-fg">
           {open ? 'expand_more' : 'chevron_right'}
@@ -166,7 +166,10 @@ export const AssistantRow = memo(function AssistantRow({
         <span className={`${COLUMN_CLASS.number} font-mono text-[10px] text-muted-fg`}>
           {messageNumber}
         </span>
-        <div className={`${COLUMN_CLASS.prompt} truncate font-mono text-[11.5px] text-muted-fg`}>
+        <div
+          className={`${COLUMN_CLASS.prompt} truncate font-mono text-[11.5px] text-muted-fg`}
+          style={{ paddingLeft: TREE_INDENT }}
+        >
           {segment.text === undefined ? (
             <span className="italic">(no text reply)</span>
           ) : (
@@ -183,7 +186,7 @@ export const AssistantRow = memo(function AssistantRow({
       {open && segment.text !== undefined && (
         <div className={`${ROW_LAYOUT} border-b border-border/30 py-2`}>
           <span className={COLUMN_CLASS.number} />
-          <div className={COLUMN_CLASS.prompt}>
+          <div className={COLUMN_CLASS.prompt} style={{ paddingLeft: TREE_INDENT }}>
             <TextSegment content={segment.text} variant="assistant" />
           </div>
           <span className={COLUMN_CLASS.elapsed} />
