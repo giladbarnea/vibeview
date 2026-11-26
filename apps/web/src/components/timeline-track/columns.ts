@@ -1,16 +1,14 @@
 /**
- * Column layout for the Timeline Track table. Header and rows import these so
- * the seven columns always line up. Widths mirror the designer's mock
- * (Timeline Track.dc.html): Time 46 · Elapsed 128 · Prompt flex · Tools 196 ·
- * Files 156 · Tokens 88 · Flags 54.
+ * Column layout for the Timeline Track table: # · Prompt (flex) · Elapsed · Tokens.
+ * Header and rows import these so the columns always line up.
  */
 
 /** Width/flex class per column, keyed by the header label it sits under. */
 export const COLUMN_CLASS = {
-  number: 'w-[44px] flex-none text-right',
-  elapsed: 'w-[50px] flex-none',
+  number: 'w-[36px] flex-none',
   prompt: 'flex-1 min-w-0',
-  tokens: 'w-[88px] flex-none',
+  elapsed: 'w-[56px] flex-none text-right whitespace-nowrap',
+  tokens: 'w-[88px] flex-none text-right',
 } as const;
 
 /** Shared horizontal layout (flex, gap, padding) for the header and every row. */

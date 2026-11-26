@@ -10,9 +10,9 @@ export function TrackColumnHeader() {
       className={`${ROW_LAYOUT} flex-none border-b border-border py-2.5 text-[11px] text-muted-fg`}
     >
       <span className={COLUMN_CLASS.number}>#</span>
-      <span className={COLUMN_CLASS.elapsed}>Elapsed</span>
       <span className={COLUMN_CLASS.prompt}>Prompt</span>
-      <span className={`${COLUMN_CLASS.tokens} text-right`}>Tokens</span>
+      <span className={COLUMN_CLASS.elapsed}>Elapsed</span>
+      <span className={COLUMN_CLASS.tokens}>Tokens</span>
     </div>
   );
 }

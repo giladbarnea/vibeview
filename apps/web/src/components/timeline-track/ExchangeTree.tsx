@@ -124,7 +124,7 @@ function TreeRow({ node, depth }: { node: TreeNode; depth: number }) {
         ) : (
           <InputOutputPreview input={node.preview} output={node.outputPreview} />
         )}
-        <span className={`${COLUMN_CLASS.tokens} ml-auto text-right font-mono text-[10px] text-muted-fg`}>
+        <span className={`${COLUMN_CLASS.tokens} ml-auto font-mono text-[10px] text-muted-fg`}>
           {formatTokenCount(node.tokens)}
         </span>
       </button>
@@ -166,9 +166,6 @@ export const AssistantRow = memo(function AssistantRow({
         <span className={`${COLUMN_CLASS.number} font-mono text-[10px] text-muted-fg`}>
           {messageNumber}
         </span>
-        <span className={`${COLUMN_CLASS.elapsed} text-right font-mono text-[10px] text-muted-fg`}>
-          {toolCount === 0 ? '' : `${toolCount} tool${toolCount === 1 ? '' : 's'}`}
-        </span>
         <div className={`${COLUMN_CLASS.prompt} truncate font-mono text-[11.5px] text-muted-fg`}>
           {segment.text === undefined ? (
             <span className="italic">(no text reply)</span>
@@ -176,17 +173,20 @@ export const AssistantRow = memo(function AssistantRow({
             <InlineMarkdown text={segment.text} />
           )}
         </div>
-        <span className={`${COLUMN_CLASS.tokens} text-right font-mono text-[10px] text-muted-fg`}>
+        <span className={`${COLUMN_CLASS.elapsed} font-mono text-[10px] text-muted-fg`}>
+          {toolCount === 0 ? '' : `${toolCount} tool${toolCount === 1 ? '' : 's'}`}
+        </span>
+        <span className={`${COLUMN_CLASS.tokens} font-mono text-[10px] text-muted-fg`}>
           {formatTokenCount(segment.tokens)}
         </span>
       </div>
       {open && segment.text !== undefined && (
         <div className={`${ROW_LAYOUT} border-b border-border/30 py-2`}>
           <span className={COLUMN_CLASS.number} />
-          <span className={COLUMN_CLASS.elapsed} />
           <div className={COLUMN_CLASS.prompt}>
             <TextSegment content={segment.text} variant="assistant" />
           </div>
+          <span className={COLUMN_CLASS.elapsed} />
           <span className={COLUMN_CLASS.tokens} />
         </div>
       )}

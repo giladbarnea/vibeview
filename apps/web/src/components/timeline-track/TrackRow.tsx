@@ -49,9 +49,9 @@ function PromptSubline({ skills, commands }: { skills: string[]; commands: strin
 }
 
 /**
- * One exchange's prompt as a clickable row: message number, elapsed time, the
- * prompt (+ optional skill/command subline), and the prompt's own estimated
- * token count. A faint band sets prompts apart from the assistant's rows.
+ * One exchange's prompt as a clickable row: message number, the prompt
+ * (+ optional skill/command subline), elapsed time, and the prompt's own
+ * estimated token count. A faint band sets prompts apart from the assistant's rows.
  * Clicking selects it and opens its full text as markdown.
  */
 export const TrackRow = memo(function TrackRow({
@@ -96,11 +96,6 @@ export const TrackRow = memo(function TrackRow({
         {messageNumber}
       </span>
 
-      {/* Elapsed */}
-      <span className={`${COLUMN_CLASS.elapsed} text-right font-mono text-[10px] whitespace-nowrap text-muted-fg`}>
-        {formatDurationMs(durationMs)}
-      </span>
-
       {/* Prompt */}
       <div className={`${COLUMN_CLASS.prompt} flex flex-col gap-0.5`}>
         {open && promptText !== undefined ? (
@@ -120,8 +115,13 @@ export const TrackRow = memo(function TrackRow({
         {hasSubline && <PromptSubline skills={skills} commands={commands} />}
       </div>
 
+      {/* Elapsed */}
+      <span className={`${COLUMN_CLASS.elapsed} font-mono text-[10px] text-muted-fg`}>
+        {formatDurationMs(durationMs)}
+      </span>
+
       {/* Tokens */}
-      <span className={`${COLUMN_CLASS.tokens} text-right font-mono text-[10px] text-muted-fg`}>
+      <span className={`${COLUMN_CLASS.tokens} font-mono text-[10px] text-muted-fg`}>
         {promptTokens === undefined ? '' : formatTokenCount(promptTokens)}
       </span>
     </div>
