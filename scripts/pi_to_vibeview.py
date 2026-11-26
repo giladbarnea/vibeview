@@ -10,11 +10,13 @@ Usage:
 
 Converts the session's active branch (last entry back to the root). Each run of
 context edits or a compaction starts a new context window, written as a system
-message with subtype "context_window" whose content is the window's label; the
-Timeline draws it as a boundary. The output file must sit inside --claude-dir:
-vibeview refuses paths outside it. The source is never written: a destination
-that is the source file (same path, symlink or hard link) is refused, and the
-output is written to a temporary file that replaces the destination only once complete.
+message with subtype "context_window" whose content says what started it
+("context edit" or "compaction"); the Timeline draws it as a boundary.
+
+The output file must sit inside --claude-dir: vibeview refuses paths outside it.
+The source is never written: a destination that is the source file (same path,
+symlink or hard link) is refused, and the output is written to a temporary file
+that replaces the destination only once complete.
 """
 import json, os, sys, tempfile
 from pathlib import Path
@@ -43,16 +45,6 @@ def assistant_blocks(content):
         "toolCall": lambda c: {"type": "tool_use", "id": c["id"], "name": c["name"], "input": c["arguments"]},
     }
     return [mapping[c["type"]](c) for c in content if c["type"] in mapping]
-
-def window_label(number, edits, compacted):
-    """
-    >>> window_label(3, 37, False)
-    'Context window 3 · after 37 context edits'
-    >>> window_label(4, 1, True)
-    'Context window 4 · after compaction and 1 context edit'
-    """
-    reasons = ["compaction"] * compacted + [f"{edits} context edit{'s' * (edits != 1)}"] * (edits > 0)
-    return f"Context window {number} · after {' and '.join(reasons)}"
 
 out = []
 previous = None
@@ -98,7 +90,7 @@ for entry in branch:
         out.append({"uuid": marker_id, "parentUuid": previous, "timestamp": entry["timestamp"],
                     "sessionId": header["id"], "cwd": header["cwd"], "isSidechain": False,
                     "type": "system", "subtype": "context_window",
-                    "content": window_label(window, pending_edits, pending_compaction)})
+                    "content": "compaction" if pending_compaction else "context edit"})
         record["parentUuid"] = marker_id
         pending_edits = 0
         pending_compaction = False

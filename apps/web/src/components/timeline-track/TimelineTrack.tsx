@@ -19,7 +19,7 @@ interface TimelineTrackProps {
   density?: Density;
   /** Clears filters/search from the empty state. */
   onReset?: () => void;
-  /** Keys of the assistant rows that are open. */
+  /** Keys of the prompt and assistant rows that are open. */
   openSegments: Set<string>;
   onToggleSegment: (key: string) => void;
 }
@@ -66,7 +66,8 @@ export function TimelineTrack({
           <WindowDivider
             key={item.key}
             windowNumber={item.windowNumber}
-            label={item.label}
+            contextTokens={item.contextTokens}
+            windowType={item.windowType}
             collapsed={collapsedWindows.has(item.windowNumber)}
             onToggle={toggleWindow}
           />
@@ -77,10 +78,14 @@ export function TimelineTrack({
         return (
           <TrackRow
             key={item.key}
+            rowKey={item.key}
             exchange={item.exchange}
             messageNumber={item.messageNumber}
             selected={selectedIndex === item.exchange.index}
             onSelect={onSelectIndex}
+            open={openSegments.has(item.key)}
+            onToggle={onToggleSegment}
+            promptText={item.promptText}
             promptTokens={item.promptTokens}
             density={density}
           />
@@ -104,7 +109,7 @@ export function TimelineTrack({
       <div ref={scrollRef} className="flex-1 overflow-y-auto">
         {empty ? <TrackEmptyState onReset={onReset} /> : shown.map(renderItem)}
       </div>
-      <WindowToc count={windowCount} collapsed={collapsedWindows} onJump={jumpToWindow} />
+      <WindowToc count={windowCount} collapsed={collapsedWindows} onJump={jumpToWindow} scrollArea={scrollRef} />
     </div>
   );
 }

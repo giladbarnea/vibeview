@@ -58,10 +58,10 @@ export function TimelineTab({
     () => buildTrackItems(visible, messages ?? [], toolResults ?? new Map()),
     [visible, messages, toolResults],
   );
-  /** Opens or closes the assistant rows between a prompt row and the next one. */
+  /** Opens or closes a prompt row together with the assistant rows up to the next prompt. */
   const setExchangeOpen = (index: number, open: boolean) => {
     const start = items.findIndex((item) => item.kind === 'prompt' && item.exchange.index === index);
-    const keys: string[] = [];
+    const keys: string[] = [items[start].key];
     for (const item of items.slice(start + 1)) {
       if (item.kind === 'prompt') break;
       if (item.kind === 'segment') keys.push(item.key);

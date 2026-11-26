@@ -8,15 +8,19 @@ import { formatTokenCount } from '../../utils';
 /** A context window's boundary line; clicking it collapses or expands the window's rows. */
 export const WindowDivider = memo(function WindowDivider({
   windowNumber,
-  label,
+  contextTokens,
+  windowType,
   collapsed,
   onToggle,
 }: {
   windowNumber: number;
-  label: string;
+  contextTokens: number | undefined;
+  windowType: string | undefined;
   collapsed: boolean;
   onToggle: (windowNumber: number) => void;
 }) {
+  const size = contextTokens === undefined ? undefined : formatTokenCount(contextTokens);
+  const label = [`Context window ${windowNumber}`, size, windowType].filter(Boolean).join(' · ');
   return (
     <button
       type="button"
