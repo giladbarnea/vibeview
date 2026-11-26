@@ -12,7 +12,9 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
+	"sync"
 
 	"github.com/driangle/vibeview/apps/lib/claude"
 	"github.com/driangle/vibeview/apps/lib/insights"
@@ -204,11 +206,23 @@ func parseFile(path, label string, unreadable error) ([]claude.Message, claude.P
 	return messages, parseResult, nil
 }
 
+// toMessages converts messages on every core: redaction inside messagedto.From
+// dominates load time, and each message converts independently. Each worker
+// writes only its own indices, so file order is preserved.
 func toMessages(messages []claude.Message) []messagedto.Message {
-	responses := make([]messagedto.Message, 0, len(messages))
-	for _, msg := range messages {
-		responses = append(responses, messagedto.From(msg))
+	responses := make([]messagedto.Message, len(messages))
+	workers := runtime.NumCPU()
+	var wait sync.WaitGroup
+	for worker := range workers {
+		wait.Add(1)
+		go func() {
+			defer wait.Done()
+			for i := worker; i < len(messages); i += workers {
+				responses[i] = messagedto.From(messages[i])
+			}
+		}()
 	}
+	wait.Wait()
 	return responses
 }
 
