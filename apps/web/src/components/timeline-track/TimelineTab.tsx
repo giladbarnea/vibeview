@@ -104,7 +104,9 @@ export function TimelineTab({
   const stepMatch = (delta: number) =>
     setMatchPosition((position) => (position + delta + matches.rowKeys.length) % matches.rowKeys.length);
 
-  // Reveal the current match: expand its window, open its row, and scroll it to the middle.
+  // Reveal the current match: expand its window and scroll it to the middle. A
+  // prompt is selected, not opened, so after Esc the arrow keys and Enter act on
+  // it; an assistant row opens to show its matching tool calls.
   useEffect(() => {
     if (currentMatchKey === undefined) return;
     const item = items.find((candidate) => candidate.key === currentMatchKey);
@@ -114,11 +116,12 @@ export function TimelineTab({
       next.delete(item.windowNumber);
       return next;
     });
-    setOpenSegments((previous) => new Set(previous).add(currentMatchKey));
+    if (item.kind === 'prompt') onSelectIndex(item.exchange.index);
+    else setOpenSegments((previous) => new Set(previous).add(currentMatchKey));
     requestAnimationFrame(() =>
       document.querySelector(`[data-row-key="${currentMatchKey}"]`)?.scrollIntoView({ block: 'center' }),
     );
-  }, [currentMatchKey, items]);
+  }, [currentMatchKey, items, onSelectIndex]);
 
   /** Opens or closes a prompt row together with the assistant rows up to the next prompt. */
   const setExchangeOpen = (index: number, open: boolean) => {
