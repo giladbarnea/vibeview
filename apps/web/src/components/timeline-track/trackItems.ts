@@ -40,23 +40,48 @@ function firstLine(text: string): string {
   return text.split('\n').find((line) => line.trim()) ?? '';
 }
 
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
 /**
- * A tool output on one line: compact JSON when the output is JSON (its first
- * line would be a bare `{` or `[`), otherwise its first non-blank line.
- * Example: `'{\n  "ok": true\n}'` gives `'{"ok":true}'`.
+ * A structured value as one readable line: `key: value` pairs joined by ` · `,
+ * arrays in square brackets with items joined by `, `, strings unquoted. An
+ * object that is a key's value gets `{ }` so its pairs stay apart from its parent's.
+ * Example: `{published: true, teams: [{teamName: 'a'}]}` gives
+ * `published: true · teams: [ teamName: a ]`.
+ */
+export function formatStructured(value: unknown): string {
+  if (Array.isArray(value))
+    return value.length === 0 ? '[]' : `[ ${value.map(formatStructured).join(', ')} ]`;
+  if (!isPlainObject(value)) return String(value);
+  return Object.entries(value)
+    .map(([key, inner]) => `${key}: ${formatKeyValue(inner)}`)
+    .join(' · ');
+}
+
+function formatKeyValue(value: unknown): string {
+  if (!isPlainObject(value)) return formatStructured(value);
+  const pairs = formatStructured(value);
+  return pairs ? `{ ${pairs} }` : '{}';
+}
+
+/**
+ * A tool output on one line: formatted structure when the output is JSON (its
+ * first line would be a bare `{` or `[`), otherwise its first non-blank line.
  */
 function outputPreview(output: string): string {
   try {
-    return JSON.stringify(JSON.parse(output));
+    return formatStructured(JSON.parse(output));
   } catch {
     return firstLine(output);
   }
 }
 
-/** A tool input's first string argument (command, path, pattern…), or its JSON when it has none. */
+/** A tool input's first string argument (command, path, pattern…), or the formatted input when it has none. */
 function inputPreview(input: ContentBlock['input']): string {
   const first = Object.values(input ?? {}).find((value) => typeof value === 'string');
-  return typeof first === 'string' ? first : JSON.stringify(input ?? {});
+  return typeof first === 'string' ? first : formatStructured(input ?? {});
 }
 
 function toolNode(key: string, block: ContentBlock, toolResults: Map<string, ContentBlock>): TreeNode {
