@@ -97,12 +97,13 @@ for entry in branch:
     out.append(record)
     previous = entry["id"]
 
-with tempfile.NamedTemporaryFile("w", dir=target.parent, prefix=f".{target.name}.", delete=False) as temporary:
-    try:
+temporary = tempfile.NamedTemporaryFile("w", dir=target.parent, prefix=f".{target.name}.", delete=False)
+try:
+    with temporary:
         for record in out:
             temporary.write(json.dumps(record) + "\n")
-    except BaseException:
-        os.unlink(temporary.name)
-        raise
-os.replace(temporary.name, target)
+    os.replace(temporary.name, target)
+except BaseException:
+    os.unlink(temporary.name)
+    raise
 print(f"branch={len(branch)} written={len(out)} windows={window}")
