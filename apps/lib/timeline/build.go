@@ -22,13 +22,15 @@ func BuildExchanges(messages []claude.Message) []Exchange {
 			idleBeforeMs = startMs - prevEndMs
 		}
 
+		preview, source := promptPreview(raw.userMessage)
 		exchanges = append(exchanges, Exchange{
 			Index:         i,
 			StartTime:     msToISO(startMs),
 			EndTime:       msToISO(endMs),
 			DurationMs:    nonNegative(endMs - startMs),
 			IdleBeforeMs:  idleBeforeMs,
-			PromptPreview: promptPreview(raw.userMessage),
+			PromptPreview: preview,
+			PromptSource:  source,
 			Model:         firstModel(raw.assistantMessages),
 			Tokens:        sumTokens(raw.assistantMessages),
 			CostUSD:       sumCost(raw.assistantMessages),

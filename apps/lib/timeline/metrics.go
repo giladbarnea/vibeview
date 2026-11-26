@@ -1,7 +1,9 @@
 package timeline
 
 import (
+	"regexp"
 	"sort"
+	"strings"
 
 	"github.com/driangle/vibeview/apps/lib/claude"
 	"github.com/driangle/vibeview/apps/lib/insights"
@@ -9,25 +11,69 @@ import (
 	"github.com/driangle/vibeview/apps/lib/redact"
 )
 
-// promptPreviewLen bounds the prompt preview to a single row's worth of text.
-const promptPreviewLen = 100
+// promptPreviewLen bounds the prompt preview to about two rows of text.
+const promptPreviewLen = 300
+
+// inboxHeader matches the first line of a Plannotator Inbox reply and captures its thread name.
+var inboxHeader = regexp.MustCompile(`^Plannotator Inbox: (?:★ )?(.+?) \(msg_\w+\)$`)
+
+// timeTag matches Pi's injected current-time notice.
+var timeTag = regexp.MustCompile(`<automatic-current-time-message>.*?</automatic-current-time-message>(?: \(Sent by Pi\.\))?`)
+
+// promptBoilerplate matches whole lines that a harness wraps around a prompt and that say nothing about it.
+var promptBoilerplate = []*regexp.Regexp{
+	regexp.MustCompile(`Their reply follows as they wrote it`),
+	regexp.MustCompile(`^\[(?:Thread|thread|Replying to|for context:) `),
+	regexp.MustCompile(`^Answered \d+ questions?\.$`),
+	regexp.MustCompile(`^No new answers in this reply`),
+	regexp.MustCompile(`^## Answers to your questions$`),
+	regexp.MustCompile(`^\d+ of \d+ questions? answered\.$`),
+}
 
 // deepThinkingThreshold is the total thinking-block character count above which
 // an exchange is flagged as deep thinking, matching the client badge rule.
 const deepThinkingThreshold = 500
 
 // promptPreview returns a redacted, truncated preview of the prompt's first text
-// block. Redaction runs before truncation so a secret is never partially exposed.
-func promptPreview(userMsg *claude.Message) string {
+// block with harness wrappers removed, and the wrapper's thread name. Redaction
+// runs before truncation so a secret is never partially exposed.
+func promptPreview(userMsg *claude.Message) (preview string, source string) {
 	if userMsg == nil || userMsg.Message == nil {
-		return ""
+		return "", ""
 	}
 	for _, block := range userMsg.Message.Content {
 		if block.Type == "text" && block.Text != "" {
-			return truncateRunes(redact.RedactSecrets(block.Text), promptPreviewLen)
+			text, source := unwrapPrompt(redact.RedactSecrets(block.Text))
+			return truncateRunes(text, promptPreviewLen), source
 		}
 	}
-	return ""
+	return "", ""
+}
+
+// unwrapPrompt drops harness boilerplate lines and time tags from a prompt and
+// returns what remains plus the Plannotator Inbox thread name, if any.
+func unwrapPrompt(text string) (string, string) {
+	source := ""
+	var kept []string
+	for _, line := range strings.Split(timeTag.ReplaceAllString(text, ""), "\n") {
+		if match := inboxHeader.FindStringSubmatch(line); match != nil {
+			source = match[1]
+			continue
+		}
+		if !matchesAny(promptBoilerplate, line) {
+			kept = append(kept, line)
+		}
+	}
+	return strings.TrimSpace(strings.Join(kept, "\n")), source
+}
+
+func matchesAny(patterns []*regexp.Regexp, line string) bool {
+	for _, pattern := range patterns {
+		if pattern.MatchString(line) {
+			return true
+		}
+	}
+	return false
 }
 
 // truncateRunes returns at most n runes of s, avoiding cutting a multibyte

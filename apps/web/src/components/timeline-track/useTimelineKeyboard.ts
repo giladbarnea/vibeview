@@ -13,8 +13,10 @@ interface UseTimelineKeyboardOptions {
   selectedIndex: number | null;
   /** Move the selection to the given exchange index. */
   onSelectIndex: (index: number) => void;
-  /** Open the detail panel for the given exchange (wired by the detail-panel task). */
-  onOpen?: (index: number) => void;
+  /** Open the assistant rows of the given exchange. */
+  onOpen: (index: number) => void;
+  /** Close the assistant rows of the given exchange. */
+  onClose: (index: number) => void;
   /** Clear the search query (Esc while the search input is focused). */
   onClearSearch: () => void;
 }
@@ -22,7 +24,7 @@ interface UseTimelineKeyboardOptions {
 /**
  * Keyboard navigation for the Timeline Track, scoped to the Timeline tab: `j`/`k`
  * (and ↓/↑) move the selection through the visible list, `e` jumps to the next
- * visible error, `↵` opens the selected exchange. While typing in the search
+ * visible error, `↵`/→ opens the selected exchange's assistant rows, ← closes them. While typing in the search
  * box only `Esc` is honoured (it clears the query); every other key types
  * normally. The listener is removed on unmount, so it never runs on the
  * Conversation tab.
@@ -33,6 +35,7 @@ export function useTimelineKeyboard({
   selectedIndex,
   onSelectIndex,
   onOpen,
+  onClose,
   onClearSearch,
 }: UseTimelineKeyboardOptions) {
   useEffect(() => {
@@ -72,9 +75,16 @@ export function useTimelineKeyboard({
           break;
         }
         case 'Enter':
+        case 'ArrowRight':
           if (selectedIndex !== null) {
             e.preventDefault();
-            onOpen?.(selectedIndex);
+            onOpen(selectedIndex);
+          }
+          break;
+        case 'ArrowLeft':
+          if (selectedIndex !== null) {
+            e.preventDefault();
+            onClose(selectedIndex);
           }
           break;
       }
@@ -82,5 +92,5 @@ export function useTimelineKeyboard({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [enabled, visibleExchanges, selectedIndex, onSelectIndex, onOpen, onClearSearch]);
+  }, [enabled, visibleExchanges, selectedIndex, onSelectIndex, onOpen, onClose, onClearSearch]);
 }

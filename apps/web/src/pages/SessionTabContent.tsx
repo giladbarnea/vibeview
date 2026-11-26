@@ -53,7 +53,7 @@ export function SessionTabContent(props: SessionTabContentProps) {
   if (props.tab === 'timeline') {
     return (
       <div className="flex flex-1 flex-col overflow-hidden px-4 sm:px-8">
-        <div className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col">
+        <div className="flex min-h-0 w-full flex-1 flex-col">
           <TimelineTab
             timeline={props.timeline}
             controller={props.controller}

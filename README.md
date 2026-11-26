@@ -2,6 +2,8 @@
 
 A local CLI tool for browsing your Claude Code sessions in a clean, read-only web interface.
 
+> **This fork** (of [driangle/vibeview](https://github.com/driangle/vibeview)) also views [Pi](https://pi.dev) sessions. Its session page is the Timeline table alone: prompts and assistant messages as rows, tool calls as expandable `input -> output` sub-rows, per-row token estimates, and collapsible context-window boundaries with a jump list. See [Viewing Pi sessions](#viewing-pi-sessions).
+
 [Documentation](https://driangle.github.io/vibeview/)
 
 vibeview watches your `~/.claude` directory, discovers sessions in real time, and presents them as a browsable chat UI with tool calls, file edits, thinking blocks, and cost breakdowns.
@@ -159,6 +161,17 @@ vibeview sessions
 vibeview sessions --limit 10 --sort messages
 vibeview sessions --dir myproject --json
 ```
+
+## Viewing Pi sessions
+
+Convert the Pi session, then open the result. The output must sit inside the directory passed to `--claude-dir`.
+
+```sh
+uv run scripts/pi_to_vibeview.py ~/.pi/agent/sessions/<project>/<session>.jsonl /tmp/pi-view/session.jsonl
+vibeview --claude-dir /tmp/pi-view web /tmp/pi-view/session.jsonl
+```
+
+The converter reads the session's active branch. A run of context edits, or a compaction, starts a new context window.
 
 ## Web UI
 

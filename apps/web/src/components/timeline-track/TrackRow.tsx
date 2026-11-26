@@ -1,23 +1,20 @@
+import { memo, useEffect, useRef } from 'react';
 import type { Exchange } from '../../types';
 import { formatDurationMs, formatTokenCount } from '../../utils';
 import { COLUMN_CLASS, ROW_LAYOUT } from './columns';
-import { FLAG_META } from './flags';
-import { LONG_EXCHANGE_MS, barPct, formatTimeOfDay } from './format';
 
 export type Density = 'compact' | 'comfortable';
 
 interface TrackRowProps {
   exchange: Exchange;
+  /** 1-based position of the prompt message among the session's messages. */
+  messageNumber: number | undefined;
   selected: boolean;
-  onSelect: () => void;
-  /** Largest duration across the visible rows, for scaling the elapsed bar. */
-  maxDurationMs: number;
-  /** Largest token count across the visible rows, for scaling the token bar. */
-  maxTokens: number;
+  onSelect: (index: number) => void;
+  /** Estimated tokens of the prompt's own text; undefined when the exchange has no prompt. */
+  promptTokens: number | undefined;
   density: Density;
 }
-
-const CHIP = 'font-mono text-[10px] rounded-[3px] px-[5px] py-px';
 
 /** Second line of the Prompt column: skill chips, the first command, and a `+N more`. */
 function PromptSubline({ skills, commands }: { skills: string[]; commands: string[] }) {
@@ -45,107 +42,63 @@ function PromptSubline({ skills, commands }: { skills: string[]; commands: strin
 }
 
 /**
- * One exchange as a clickable row: clock, elapsed bar, prompt (+ optional skill/
- * command subline), tool chips, files, token bar, and flag dots. Renders only
- * server-provided values; bar widths and the amber "long" colour are visual
- * scaling of those values.
+ * One exchange's prompt as a clickable row: message number, elapsed time,
+ * the right-aligned prompt (+ optional skill/command subline), and the prompt's
+ * own estimated token count.
  */
-export function TrackRow({
+export const TrackRow = memo(function TrackRow({
   exchange,
+  messageNumber,
   selected,
   onSelect,
-  maxDurationMs,
-  maxTokens,
+  promptTokens,
   density,
 }: TrackRowProps) {
-  const { startTime, durationMs, promptPreview, skills, commands, tools, files, tokens, flags } =
-    exchange;
+  const { durationMs, promptPreview, promptSource, skills, commands } = exchange;
+  const rowRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (selected) rowRef.current?.scrollIntoView({ block: 'nearest' });
+  }, [selected]);
 
-  const clock = formatTimeOfDay(startTime);
-  const isLong = durationMs >= LONG_EXCHANGE_MS;
-  const moreFiles = files.length - 1;
   const hasSubline = skills.length > 0 || commands.length > 0;
-  const activeFlags = FLAG_META.filter(({ key }) => flags[key]);
 
   return (
     <button
+      ref={rowRef}
       type="button"
-      onClick={onSelect}
+      onClick={() => onSelect(exchange.index)}
       aria-current={selected || undefined}
       style={selected ? { boxShadow: 'inset 3px 0 0 var(--primary)' } : undefined}
       className={`${ROW_LAYOUT} w-full border-b border-border/60 text-left hover:bg-primary/5 ${
         density === 'compact' ? 'py-2' : 'py-3'
       } ${selected ? 'bg-primary/10' : ''}`}
     >
-      {/* Time */}
-      <span className={`${COLUMN_CLASS.time} font-mono text-[10px] text-muted-fg`}>
-        {clock || '—'}
+      <span className={`${COLUMN_CLASS.number} font-mono text-[10px] text-muted-fg`}>
+        {messageNumber}
       </span>
 
       {/* Elapsed */}
-      <div className={`${COLUMN_CLASS.elapsed} flex items-center gap-1.5`}>
-        <div className="flex min-w-0 flex-1">
-          <div
-            className={`h-1.5 rounded-full ${isLong ? 'bg-warning' : 'bg-primary'}`}
-            style={{ width: `${barPct(durationMs, maxDurationMs)}%` }}
-          />
-        </div>
-        <span className="w-[46px] flex-none text-right font-mono text-[10px] whitespace-nowrap text-muted-fg">
-          {formatDurationMs(durationMs)}
-        </span>
-      </div>
+      <span className={`${COLUMN_CLASS.elapsed} text-right font-mono text-[10px] whitespace-nowrap text-muted-fg`}>
+        {formatDurationMs(durationMs)}
+      </span>
 
       {/* Prompt */}
-      <div className={`${COLUMN_CLASS.prompt} flex flex-col gap-0.5`}>
-        <span className="truncate font-mono text-[11.5px]">
+      <div className={`${COLUMN_CLASS.prompt} flex flex-col items-end gap-0.5`}>
+        <span className="line-clamp-2 text-right font-mono text-[11.5px]" title={promptPreview}>
+          {promptSource && (
+            <span className="mr-2 rounded-[3px] bg-secondary px-[5px] py-px text-[10px] text-muted-fg">
+              {promptSource}
+            </span>
+          )}
           {promptPreview || <span className="text-muted-fg">(no prompt)</span>}
         </span>
         {hasSubline && <PromptSubline skills={skills} commands={commands} />}
       </div>
 
-      {/* Tools */}
-      <div className={`${COLUMN_CLASS.tools} flex items-center gap-1 overflow-hidden`}>
-        {tools.map((tool) => (
-          <span key={tool} className={`${CHIP} flex-none bg-secondary text-secondary-fg`}>
-            {tool}
-          </span>
-        ))}
-      </div>
-
-      {/* Files */}
-      <div className={`${COLUMN_CLASS.files} flex items-center gap-1.5 overflow-hidden`}>
-        {files[0] && (
-          <span className="min-w-0 flex-[0_1_auto] truncate font-mono text-[10px] text-muted-fg">
-            {files[0]}
-          </span>
-        )}
-        {moreFiles > 0 && (
-          <span className="flex-none font-mono text-[10px] text-muted-fg">+{moreFiles}</span>
-        )}
-      </div>
-
       {/* Tokens */}
-      <div className={`${COLUMN_CLASS.tokens} flex items-center justify-end gap-1.5`}>
-        <div
-          className="h-1 rounded-full bg-primary/35"
-          style={{ width: `${barPct(tokens, maxTokens)}%` }}
-        />
-        <span className="w-9 flex-none text-right font-mono text-[10px] text-muted-fg">
-          {formatTokenCount(tokens)}
-        </span>
-      </div>
-
-      {/* Flags */}
-      <div className={`${COLUMN_CLASS.flags} flex justify-end gap-[3px]`}>
-        {activeFlags.map(({ key, label, color }) => (
-          <span
-            key={key}
-            title={label}
-            className="h-[7px] w-[7px] rounded-full"
-            style={{ backgroundColor: color }}
-          />
-        ))}
-      </div>
+      <span className={`${COLUMN_CLASS.tokens} text-right font-mono text-[10px] text-muted-fg`}>
+        {promptTokens === undefined ? '' : formatTokenCount(promptTokens)}
+      </span>
     </button>
   );
-}
+});

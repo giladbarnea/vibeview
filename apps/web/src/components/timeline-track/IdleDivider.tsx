@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { formatDurationMs } from '../../utils';
 
 interface IdleDividerProps {
@@ -10,7 +11,7 @@ interface IdleDividerProps {
  * with the gap duration centered. Rendered only for gaps the container deems
  * worth surfacing (see IDLE_DIVIDER_MIN_MS).
  */
-export function IdleDivider({ idleMs }: IdleDividerProps) {
+export const IdleDivider = memo(function IdleDivider({ idleMs }: IdleDividerProps) {
   return (
     <div className="flex items-center gap-2.5 py-1.5 pr-8 pl-[98px]" data-testid="idle-divider">
       <div className="flex-1 border-t border-dashed border-border" />
@@ -18,4 +19,4 @@ export function IdleDivider({ idleMs }: IdleDividerProps) {
       <div className="flex-1 border-t border-dashed border-border" />
     </div>
   );
-}
+});

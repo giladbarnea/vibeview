@@ -24,11 +24,12 @@ type Exchange struct {
 	DurationMs    int64         `json:"durationMs"`   // EndTime - StartTime, never negative
 	IdleBeforeMs  int64         `json:"idleBeforeMs"` // gap from the previous exchange's end; 0 for the first
 	PromptPreview string        `json:"promptPreview"`
-	Model         string        `json:"model"`   // model id of the first assistant reply ("" if none)
-	Tokens        int           `json:"tokens"`  // sum of assistant input+output tokens
-	CostUSD       float64       `json:"costUSD"` // sum of per-message cost via the pricing helper
-	Tools         []string      `json:"tools"`   // distinct tool names, sorted
-	Files         []string      `json:"files"`   // distinct file paths touched, masked and sorted
+	PromptSource  string        `json:"promptSource"` // thread name of a harness-wrapped prompt such as a Plannotator Inbox reply ("" if none)
+	Model         string        `json:"model"`        // model id of the first assistant reply ("" if none)
+	Tokens        int           `json:"tokens"`       // sum of assistant input+output tokens
+	CostUSD       float64       `json:"costUSD"`      // sum of per-message cost via the pricing helper
+	Tools         []string      `json:"tools"`        // distinct tool names, sorted
+	Files         []string      `json:"files"`        // distinct file paths touched, masked and sorted
 	Commands      []string      `json:"commands"`
 	Skills        []string      `json:"skills"`
 	Flags         ExchangeFlags `json:"flags"`

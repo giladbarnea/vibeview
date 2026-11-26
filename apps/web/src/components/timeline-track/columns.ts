@@ -7,13 +7,10 @@
 
 /** Width/flex class per column, keyed by the header label it sits under. */
 export const COLUMN_CLASS = {
-  time: 'w-[46px] flex-none',
-  elapsed: 'w-[140px] flex-none',
+  number: 'w-[44px] flex-none text-right',
+  elapsed: 'w-[50px] flex-none',
   prompt: 'flex-1 min-w-0',
-  tools: 'w-[220px] flex-none',
-  files: 'w-[176px] flex-none',
   tokens: 'w-[88px] flex-none',
-  flags: 'w-[54px] flex-none',
 } as const;
 
 /** Shared horizontal layout (flex, gap, padding) for the header and every row. */

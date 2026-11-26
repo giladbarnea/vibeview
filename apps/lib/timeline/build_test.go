@@ -379,8 +379,42 @@ func TestBuildExchanges_CostUnknownModelStillPopulated(t *testing.T) {
 	}
 }
 
+func TestBuildExchanges_PromptPreviewStripsHarnessWrappers(t *testing.T) {
+	inboxReply := strings.Join([]string{
+		"Plannotator Inbox: ★ Maintenance experiment (msg_01M72SQ2T704AFJMZ1DWWE98K0)",
+		"This is a user reply from Plannotator Inbox. Their reply follows as they wrote it: it is their answer to you. When they need to hear back, answer in the same thread: plannotator_inbox send_message with reply_to set to the id in parentheses on the line above.",
+		"[Thread msg_01M72QNV19MS4CWMSD25QYA00A: 5 messages, 1 question open, don't re-ask it. Your last message was just now]",
+		`[Replying to your message from 3 minutes ago (msg_01M72SJHX2Q3ETE275XEG6DGT2): "The fleet is running again."]`,
+		"",
+		"Answered 1 question.",
+		"",
+		"so soft-pause everyone",
+		"",
+		"## Answers to your questions",
+		"",
+		"1 of 1 question answered.",
+		"",
+		"[thread msg_01M6KBB6TVB2CTZ3WQFRY6W3KE · more: plannotator_inbox read_thread · how it works: plannotator inbox --help]",
+	}, "\n")
+	timeTagged := "<automatic-current-time-message>Thu 2026-11-26 08:48:56 GMT+2 (session +475h11m)</automatic-current-time-message> (Sent by Pi.)\nfix the bug"
+
+	got := BuildExchanges([]claude.Message{
+		userMsg("u1", 1000, textBlock(inboxReply)),
+		userMsg("u2", 2000, textBlock(timeTagged)),
+	})
+
+	if got[0].PromptPreview != "so soft-pause everyone" || got[0].PromptSource != "Maintenance experiment" {
+		t.Errorf("inbox reply: preview %q, source %q; want %q, %q",
+			got[0].PromptPreview, got[0].PromptSource, "so soft-pause everyone", "Maintenance experiment")
+	}
+	if got[1].PromptPreview != "fix the bug" || got[1].PromptSource != "" {
+		t.Errorf("time-tagged prompt: preview %q, source %q; want %q, %q",
+			got[1].PromptPreview, got[1].PromptSource, "fix the bug", "")
+	}
+}
+
 func TestBuildExchanges_PromptPreviewTruncatedAndRedacted(t *testing.T) {
-	long := strings.Repeat("a", 250)
+	long := strings.Repeat("a", promptPreviewLen+50)
 	got := BuildExchanges([]claude.Message{
 		userMsg("u1", 1000, textBlock(long)),
 	})

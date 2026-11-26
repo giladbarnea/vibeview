@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { NavLink, useSearchParams } from 'react-router-dom';
+import { NavLink, useMatch, useSearchParams } from 'react-router-dom';
 import useSWR from 'swr';
 import { fetcher } from '../api';
 import { useBackendStatus } from '../hooks/useBackendStatus';
@@ -78,6 +78,9 @@ export function NavBar() {
   const { data: config } = useSWR<AppConfig>('/api/config', fetcher);
   const backendStatus = useBackendStatus();
   const [menuOpen, setMenuOpen] = useState(false);
+  const onSessionPage = useMatch('/session/:id') !== null;
+
+  if (onSessionPage) return null;
 
   return (
     <nav className="border-b border-border bg-card">

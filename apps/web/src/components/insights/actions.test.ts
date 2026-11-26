@@ -10,6 +10,7 @@ function makeExchange(overrides: Partial<Exchange> & { index: number }): Exchang
     durationMs: 1000,
     idleBeforeMs: 0,
     promptPreview: `Prompt ${overrides.index}`,
+    promptSource: '',
     model: 'claude-opus-4-8',
     tokens: 100,
     costUSD: 0.1,

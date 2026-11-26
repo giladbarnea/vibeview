@@ -27,7 +27,7 @@ const sanitizeSchema: RehypeSanitizeOptions = {
 const proseBase =
   'prose prose-sm max-w-none leading-relaxed break-words prose-pre:bg-transparent prose-pre:p-0 prose-code:before:content-none prose-code:after:content-none prose-code:rounded prose-code:px-1.5 prose-code:py-0.5 prose-code:text-[0.8em] prose-code:font-mono';
 
-function TextSegment({ content, variant }: { content: string; variant?: 'user' | 'assistant' }) {
+export function TextSegment({ content, variant }: { content: string; variant?: 'user' | 'assistant' }) {
   const colorClasses =
     variant === 'user'
       ? 'text-inherit prose-headings:text-inherit prose-strong:text-inherit prose-code:bg-white/20 prose-code:text-inherit prose-a:text-inherit prose-a:underline'

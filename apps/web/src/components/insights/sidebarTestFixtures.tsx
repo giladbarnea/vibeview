@@ -98,6 +98,7 @@ export function makeExchange(overrides: Partial<Exchange> & { index: number }): 
     durationMs: 30_000,
     idleBeforeMs: 0,
     promptPreview: `Prompt ${overrides.index}`,
+    promptSource: '',
     model: 'claude-opus-4-8',
     tokens: 1000,
     costUSD: 0.5,

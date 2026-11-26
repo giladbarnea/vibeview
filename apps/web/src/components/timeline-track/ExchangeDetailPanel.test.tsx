@@ -13,6 +13,7 @@ function makeExchange(overrides: Partial<Exchange> & { index: number }): Exchang
     durationMs: 45_000,
     idleBeforeMs: 0,
     promptPreview: 'Wire up the timeline',
+    promptSource: '',
     model: 'claude-opus-4-8',
     tokens: 12_000,
     costUSD: 0.42,

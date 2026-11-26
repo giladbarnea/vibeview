@@ -30,6 +30,16 @@ export function formatTimeOfDay(iso: string): string {
   });
 }
 
+/** Format an ISO timestamp as a local day label like `Thu, Nov 26`; `''` for empty/invalid input. */
+const DAY_FORMAT = new Intl.DateTimeFormat([], { weekday: 'short', month: 'short', day: 'numeric' });
+
+export function formatDay(iso: string): string {
+  if (!iso) return '';
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '';
+  return DAY_FORMAT.format(date);
+}
+
 /**
  * A value's share of the row-set maximum, clamped to 0–100, for scaling the
  * elapsed and token bars. Returns 0 when there is no positive maximum.

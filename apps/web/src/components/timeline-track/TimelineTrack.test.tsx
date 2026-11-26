@@ -32,6 +32,7 @@ function makeExchange(overrides: Partial<Exchange> & { index: number }): Exchang
     durationMs: 30_000,
     idleBeforeMs: 0,
     promptPreview: `Prompt ${overrides.index}`,
+    promptSource: '',
     model: 'claude-opus-4-8',
     tokens: 1000,
     costUSD: 0.5,
@@ -44,6 +45,8 @@ function makeExchange(overrides: Partial<Exchange> & { index: number }): Exchang
     ...overrides,
   };
 }
+
+const treeProps = { openSegments: new Set<string>(), onToggleSegment: () => {} };
 
 function makeTimeline(exchanges: Exchange[]): TimelineResponse {
   return { exchanges, insights: emptyInsights };
@@ -64,7 +67,7 @@ describe('TimelineTrack', () => {
       }),
       makeExchange({ index: 1, promptPreview: 'Write tests' }),
     ]);
-    render(<TimelineTrack timeline={timeline} selectedIndex={null} onSelectIndex={noop} />);
+    render(<TimelineTrack {...treeProps} timeline={timeline} selectedIndex={null} onSelectIndex={noop} />);
 
     const rows = screen.getAllByRole('button');
     expect(rows).toHaveLength(2);
@@ -84,7 +87,7 @@ describe('TimelineTrack', () => {
       makeExchange({ index: 1, idleBeforeMs: 1_000 }), // below threshold
       makeExchange({ index: 2, idleBeforeMs: IDLE_DIVIDER_MIN_MS + 60_000 }),
     ]);
-    render(<TimelineTrack timeline={timeline} selectedIndex={null} onSelectIndex={noop} />);
+    render(<TimelineTrack {...treeProps} timeline={timeline} selectedIndex={null} onSelectIndex={noop} />);
 
     const dividers = screen.getAllByTestId('idle-divider');
     expect(dividers).toHaveLength(1);
@@ -97,7 +100,7 @@ describe('TimelineTrack', () => {
       makeExchange({ index: 1, durationMs: 5_000 }),
     ]);
     const { container } = render(
-      <TimelineTrack timeline={timeline} selectedIndex={null} onSelectIndex={noop} />,
+      <TimelineTrack {...treeProps} timeline={timeline} selectedIndex={null} onSelectIndex={noop} />,
     );
 
     const rows = screen.getAllByRole('button');
@@ -112,7 +115,7 @@ describe('TimelineTrack', () => {
     const onSelectIndex = vi.fn();
     const timeline = makeTimeline([makeExchange({ index: 0 }), makeExchange({ index: 1 })]);
     render(
-      <TimelineTrack timeline={timeline} selectedIndex={null} onSelectIndex={onSelectIndex} />,
+      <TimelineTrack {...treeProps} timeline={timeline} selectedIndex={null} onSelectIndex={onSelectIndex} />,
     );
 
     await user.click(screen.getAllByRole('button')[1]);
@@ -121,7 +124,7 @@ describe('TimelineTrack', () => {
 
   it('marks the selected row with aria-current', () => {
     const timeline = makeTimeline([makeExchange({ index: 0 }), makeExchange({ index: 1 })]);
-    render(<TimelineTrack timeline={timeline} selectedIndex={1} onSelectIndex={noop} />);
+    render(<TimelineTrack {...treeProps} timeline={timeline} selectedIndex={1} onSelectIndex={noop} />);
 
     const rows = screen.getAllByRole('button');
     expect(rows[0]).not.toHaveAttribute('aria-current');
@@ -129,7 +132,7 @@ describe('TimelineTrack', () => {
   });
 
   it('renders the empty state when there are no exchanges', () => {
-    render(<TimelineTrack timeline={makeTimeline([])} selectedIndex={null} onSelectIndex={noop} />);
+    render(<TimelineTrack {...treeProps} timeline={makeTimeline([])} selectedIndex={null} onSelectIndex={noop} />);
     expect(screen.getByTestId('track-empty-state')).toBeInTheDocument();
     expect(screen.getByText('No exchanges match these filters')).toBeInTheDocument();
     expect(screen.queryByRole('button')).toBeNull();
@@ -138,7 +141,7 @@ describe('TimelineTrack', () => {
   it('shows the reset link in the empty state only when onReset is provided', () => {
     const onReset = vi.fn();
     render(
-      <TimelineTrack
+      <TimelineTrack {...treeProps}
         timeline={makeTimeline([])}
         selectedIndex={null}
         onSelectIndex={noop}

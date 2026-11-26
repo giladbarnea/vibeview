@@ -18,6 +18,7 @@ const exchange: Exchange = {
   durationMs: 45_000,
   idleBeforeMs: 0,
   promptPreview: 'do the thing',
+  promptSource: '',
   model: 'claude-opus-4-8',
   tokens: 12_000,
   costUSD: 0.42,

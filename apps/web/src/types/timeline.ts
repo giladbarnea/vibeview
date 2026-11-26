@@ -17,6 +17,7 @@ export interface Exchange {
   durationMs: number;
   idleBeforeMs: number;
   promptPreview: string;
+  promptSource: string; // thread name of a harness-wrapped prompt ("" if none)
   model: string;
   tokens: number;
   costUSD: number;

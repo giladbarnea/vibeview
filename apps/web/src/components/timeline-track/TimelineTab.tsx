@@ -1,8 +1,8 @@
+import { useCallback, useState } from 'react';
 import type { Exchange, TimelineResponse } from '../../types';
-import { TimelineToolbar } from './TimelineToolbar';
+import { exchangeItems, isSegment } from './ExchangeTree';
+import { resolveExchangeMessages } from './exchangeData';
 import { TimelineTrack } from './TimelineTrack';
-import { OverviewStrip } from './OverviewStrip';
-import { ExchangeDetailPanel } from './ExchangeDetailPanel';
 import { useTimelineKeyboard } from './useTimelineKeyboard';
 import type { TimelineController } from './useTimeline';
 import type { SessionMessageContext } from './exchangeData';
@@ -17,13 +17,10 @@ interface TimelineTabProps {
   /** Switch to the Conversation tab, jumping to the given exchange (best-effort). */
   onOpenInConversation?: (exchange: Exchange) => void;
   /**
-   * Session messages + maps threaded into the detail panel's `MessageBubble`s.
-   * When omitted, the detail panel is not rendered (e.g. before data loads).
+   * Session messages + maps used to build the assistant rows under each prompt.
    */
   messageContext?: SessionMessageContext;
   density?: Density;
-  /** Show the overview strip above the track. Defaults to on. */
-  showOverview?: boolean;
 }
 
 /**
@@ -35,56 +32,58 @@ interface TimelineTabProps {
 export function TimelineTab({
   timeline,
   controller,
-  onClose,
-  onOpenInConversation,
   messageContext,
   density,
-  showOverview = true,
 }: TimelineTabProps) {
   const {
     allExchanges,
     visible,
-    filters,
-    toggleFilter,
     clearSearch,
     reset,
-    step,
-    shownLabel,
-    matched,
-    matchPos,
     showIdleGaps,
     selectedIndex,
     onSelectIndex,
-    selectedExchange,
   } = controller;
+
+  const [openSegments, setOpenSegments] = useState<Set<string>>(new Set());
+  const toggleSegment = useCallback(
+    (key: string) =>
+      setOpenSegments((previous) => {
+        const next = new Set(previous);
+        if (!next.delete(key)) next.add(key);
+        return next;
+      }),
+    [],
+  );
+  const setExchangeOpen = (index: number, open: boolean) => {
+    const exchange = allExchanges.find((e) => e.index === index);
+    if (!exchange || !messageContext) return;
+    const exchangeMessages = resolveExchangeMessages({ exchange, messages: messageContext.messages });
+    const keys = exchangeItems(exchangeMessages, messageContext.toolResults)
+      .filter(isSegment)
+      .map((segment) => segment.key);
+    setOpenSegments((previous) => {
+      const next = new Set(previous);
+      for (const key of keys) {
+        if (open) next.add(key);
+        else next.delete(key);
+      }
+      return next;
+    });
+  };
 
   useTimelineKeyboard({
     enabled: allExchanges.length > 0,
     visibleExchanges: visible,
     selectedIndex,
     onSelectIndex,
+    onOpen: (index) => setExchangeOpen(index, true),
+    onClose: (index) => setExchangeOpen(index, false),
     onClearSearch: clearSearch,
   });
 
-  const showPanel = selectedExchange !== undefined && messageContext !== undefined;
-
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <TimelineToolbar
-        exchanges={allExchanges}
-        filters={filters}
-        onToggleFilter={toggleFilter}
-        shownLabel={shownLabel}
-      />
-      {timeline && (
-        <OverviewStrip
-          insights={timeline.insights}
-          exchanges={allExchanges}
-          selectedIndex={selectedIndex}
-          onSelectIndex={onSelectIndex}
-          show={showOverview}
-        />
-      )}
       <div className="flex min-h-0 flex-1">
         <TimelineTrack
           timeline={timeline}
@@ -94,17 +93,10 @@ export function TimelineTab({
           onSelectIndex={onSelectIndex}
           density={density}
           onReset={reset}
+          messageContext={messageContext}
+          openSegments={openSegments}
+          onToggleSegment={toggleSegment}
         />
-        {showPanel && (
-          <ExchangeDetailPanel
-            exchange={selectedExchange}
-            context={messageContext}
-            onPrev={matchPos > 0 ? () => step(-1) : undefined}
-            onNext={matchPos >= 0 && matchPos < matched - 1 ? () => step(1) : undefined}
-            onClose={onClose ?? (() => undefined)}
-            onOpenInConversation={() => onOpenInConversation?.(selectedExchange)}
-          />
-        )}
       </div>
     </div>
   );
