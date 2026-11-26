@@ -164,15 +164,12 @@ vibeview sessions --dir myproject --json
 
 ## Viewing Pi sessions
 
-Convert the Pi session, then open the result. The output must sit inside the directory passed to `--claude-dir`, and that directory must exist.
-
 ```sh
-mkdir -p /tmp/pi-view
-uv run scripts/pi_to_vibeview.py ~/.pi/agent/sessions/<project>/<session>.jsonl /tmp/pi-view/session.jsonl
-vibeview --claude-dir /tmp/pi-view web --open /tmp/pi-view/session.jsonl
+./start.sh path/to/session.jsonl                # opens the session in the browser
+./start.sh path/to/session.jsonl --port 4882    # extra flags go to `vibeview web`
 ```
 
-The converter reads the session's active branch. A run of context edits, or a compaction, starts a new context window. It never writes the source session: it refuses a destination that is the source file itself, including through a symlink or hard link. The converted file is a one-time copy, so to see newer messages, rerun the converter and reload the page.
+`start.sh` converts the session with `scripts/pi_to_vibeview.py` into a temporary folder, serves it, and opens its page; Ctrl+C stops it and deletes the folder. It needs a built binary (`make build`). The conversion reads the session's active branch; a run of context edits, or a compaction, starts a new context window. The converter never writes the source session, even through a symlink or hard link. The page shows the session as it was when `start.sh` ran: to see newer messages, run it again.
 
 ## Web UI
 

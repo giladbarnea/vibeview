@@ -217,7 +217,7 @@ Examples:
 			}
 
 			if open {
-				go openBrowser(url)
+				go openBrowser(openURL(url, cfg.Index))
 			}
 
 			sigCh := make(chan os.Signal, 1)
@@ -984,6 +984,15 @@ func printQRCode(url string) {
 		return
 	}
 	fmt.Println(qr.ToSmallString(false))
+}
+
+// openURL is the page --open shows: the session itself when exactly one
+// session file was given, otherwise the sessions list.
+func openURL(base string, idx *session.Index) string {
+	if idx == nil || len(idx.GetSessions()) != 1 {
+		return base
+	}
+	return base + "/session/" + idx.GetSessions()[0].SessionID
 }
 
 func openBrowser(url string) {
