@@ -38,7 +38,6 @@ interface SessionTabContentProps {
   setFollowMode: Dispatch<SetStateAction<boolean>>;
   missingToolResultCount: number;
   skippedLines: number | undefined;
-  streamError: string | null;
   messagesEndRef: RefObject<HTMLDivElement | null>;
 }
 
@@ -99,7 +98,6 @@ export function SessionTabContent(props: SessionTabContentProps) {
       }
       missingToolResultCount={props.missingToolResultCount}
       skippedLines={props.skippedLines}
-      streamError={props.streamError}
       messagesEndRef={props.messagesEndRef}
     />
   );

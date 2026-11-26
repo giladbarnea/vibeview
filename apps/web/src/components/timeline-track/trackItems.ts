@@ -188,7 +188,7 @@ export function buildTrackItems(
     });
 
     for (const message of exchange.messageUuids.flatMap((uuid) => messagesByUuid.get(uuid) ?? [])) {
-      if (message.type === 'system' && message.content) {
+      if (message.type === 'system' && message.data?.subtype === 'context_window' && message.content) {
         flushPending();
         windowNumber += 1;
         items.push({ kind: 'boundary', key: message.uuid, windowNumber, label: message.content });

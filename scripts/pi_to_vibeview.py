@@ -10,11 +10,17 @@ Usage:
 
 Converts the session's active branch (last entry back to the root). Each run of
 context edits or a compaction starts a new context window, written as a system
-message whose content is the window's label; the Timeline draws it as a boundary.
-The output file must sit inside --claude-dir: vibeview refuses paths outside it.
+message with subtype "context_window" whose content is the window's label; the
+Timeline draws it as a boundary. The output file must sit inside --claude-dir:
+vibeview refuses paths outside it. The source is never written: a destination
+that is the source file (same path, symlink or hard link) is refused, and the
+output is written to a temporary file that replaces the destination only once complete.
 """
-import json, sys
-source, target = sys.argv[1], sys.argv[2]
+import json, os, sys, tempfile
+from pathlib import Path
+source, target = Path(sys.argv[1]), Path(sys.argv[2])
+if target.exists() and os.path.samefile(source, target):
+    sys.exit(f"refusing to write {target}: it is the source session file itself")
 entries = [json.loads(line) for line in open(source)]
 header = entries[0]
 by_id = {e["id"]: e for e in entries[1:] if "id" in e}
@@ -91,14 +97,20 @@ for entry in branch:
         marker_id = f"window-{window}"
         out.append({"uuid": marker_id, "parentUuid": previous, "timestamp": entry["timestamp"],
                     "sessionId": header["id"], "cwd": header["cwd"], "isSidechain": False,
-                    "type": "system", "content": window_label(window, pending_edits, pending_compaction)})
+                    "type": "system", "subtype": "context_window",
+                    "content": window_label(window, pending_edits, pending_compaction)})
         record["parentUuid"] = marker_id
         pending_edits = 0
         pending_compaction = False
     out.append(record)
     previous = entry["id"]
 
-with open(target, "w") as f:
-    for record in out:
-        f.write(json.dumps(record) + "\n")
+with tempfile.NamedTemporaryFile("w", dir=target.parent, prefix=f".{target.name}.", delete=False) as temporary:
+    try:
+        for record in out:
+            temporary.write(json.dumps(record) + "\n")
+    except BaseException:
+        os.unlink(temporary.name)
+        raise
+os.replace(temporary.name, target)
 print(f"branch={len(branch)} written={len(out)} windows={window}")

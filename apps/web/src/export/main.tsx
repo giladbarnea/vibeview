@@ -18,21 +18,6 @@ function readPayload(): ExportPayload | null {
   }
 }
 
-/**
- * An exported page has no server, so the live-update stream can never connect.
- * Replacing EventSource with an inert stub keeps `useSessionStream` from
- * retrying and filling the console with connection errors.
- */
-function disableEventSource() {
-  class InertEventSource {
-    readyState = 2; // CLOSED
-    addEventListener() {}
-    removeEventListener() {}
-    close() {}
-  }
-  window.EventSource = InertEventSource as unknown as typeof EventSource;
-}
-
 function render() {
   const root = document.getElementById('root');
   if (!root) return;
@@ -43,7 +28,6 @@ function render() {
     return;
   }
 
-  disableEventSource();
   createRoot(root).render(
     <StrictMode>
       <StaticSessionApp payload={payload} />

@@ -22,7 +22,6 @@ interface ConversationFlowProps {
   onToggleFollow: () => void;
   missingToolResultCount: number;
   skippedLines: number | undefined;
-  streamError: string | null;
   messagesEndRef: RefObject<HTMLDivElement | null>;
 }
 
@@ -44,7 +43,6 @@ export function ConversationFlow({
   onToggleFollow,
   missingToolResultCount,
   skippedLines,
-  streamError,
   messagesEndRef,
 }: ConversationFlowProps) {
   return (
@@ -67,11 +65,6 @@ export function ConversationFlow({
         {skippedLines != null && skippedLines > 0 && (
           <div className="rounded-lg border border-amber-200 dark:border-amber-800/50 bg-amber-50 dark:bg-amber-900/20 px-3 py-2 text-xs text-amber-600 dark:text-amber-400">
             {skippedLines} malformed line{skippedLines === 1 ? '' : 's'} skipped during parsing
-          </div>
-        )}
-        {streamError && (
-          <div className="rounded-lg border border-amber-200 dark:border-amber-800/50 bg-amber-50 dark:bg-amber-900/20 px-3 py-2 text-xs text-amber-600 dark:text-amber-400">
-            Stream error: {streamError}
           </div>
         )}
 

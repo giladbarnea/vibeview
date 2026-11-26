@@ -2,7 +2,7 @@
 
 A local CLI tool for browsing your Claude Code sessions in a clean, read-only web interface.
 
-> **This fork** (of [driangle/vibeview](https://github.com/driangle/vibeview)) also views [Pi](https://pi.dev) sessions. Its session page is the Timeline table alone: prompts and assistant messages as rows, tool calls as expandable `input -> output` sub-rows, per-row token estimates, and collapsible context-window boundaries with a jump list. See [Viewing Pi sessions](#viewing-pi-sessions).
+> **This fork** (of [driangle/vibeview](https://github.com/driangle/vibeview)) also views [Pi](https://pi.dev) sessions. Its session page is the Timeline table alone: prompts and assistant messages as rows, tool calls as expandable `input -> output` sub-rows, per-row token estimates, and collapsible context-window boundaries with a jump list. The session page is a snapshot taken when the page loads; reload the page to see changes to the file. See [Viewing Pi sessions](#viewing-pi-sessions).
 
 [Documentation](https://driangle.github.io/vibeview/)
 
@@ -171,7 +171,7 @@ uv run scripts/pi_to_vibeview.py ~/.pi/agent/sessions/<project>/<session>.jsonl 
 vibeview --claude-dir /tmp/pi-view web /tmp/pi-view/session.jsonl
 ```
 
-The converter reads the session's active branch. A run of context edits, or a compaction, starts a new context window.
+The converter reads the session's active branch. A run of context edits, or a compaction, starts a new context window. It never writes the source session: it refuses a destination that is the source file itself, including through a symlink or hard link. The converted file is a one-time copy, so to see newer messages, rerun the converter and reload the page.
 
 ## Web UI
 

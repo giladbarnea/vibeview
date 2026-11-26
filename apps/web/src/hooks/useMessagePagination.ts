@@ -7,7 +7,6 @@ interface UseMessagePaginationOptions {
   autoFollow: boolean;
   isSettingsLoaded: boolean;
   printing: boolean;
-  streamedMessageCount: number;
 }
 
 export function useMessagePagination({
@@ -16,7 +15,6 @@ export function useMessagePagination({
   autoFollow,
   isSettingsLoaded,
   printing,
-  streamedMessageCount,
 }: UseMessagePaginationOptions) {
   const [userPage, setUserPage] = useState<number | null>(null);
   const [followMode, setFollowMode] = useState(false);
@@ -116,12 +114,6 @@ export function useMessagePagination({
       scrollContainerToBottom();
     }
   });
-
-  useEffect(() => {
-    if (followMode && streamedMessageCount > 0) {
-      scrollContainerToBottom();
-    }
-  }, [streamedMessageCount, followMode, scrollContainerToBottom]);
 
   const scrollToEnd = useCallback(() => {
     pendingScrollToEnd.current = true;

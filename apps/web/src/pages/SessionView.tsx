@@ -25,11 +25,8 @@ export function SessionView() {
     error,
     isLoading,
     mutate,
-    streamedMessages,
-    streamError,
     toolResults,
     missingToolResultCount,
-    liveActivityState,
     displayMessages,
     insights,
     timeline,
@@ -72,7 +69,6 @@ export function SessionView() {
     autoFollow: settings.autoFollow,
     isSettingsLoaded: isLoaded,
     printing,
-    streamedMessageCount: focusedAgentId ? 0 : streamedMessages.length,
   });
   const onBack = useCallback(() => navigate(-1), [navigate]);
   const { selectedIndex } = useKeyboardNavigation({
@@ -86,7 +82,7 @@ export function SessionView() {
   if (error && !session) return <SessionErrorState error={error} onRetry={() => mutate()} />;
   if (isLoading || !session) return <SessionLoadingState />;
 
-  const activityState = liveActivityState ?? session.activityState;
+  const activityState = session.activityState;
   return (
     <div className="flex flex-col lg:flex-row h-full overflow-hidden">
       <div
@@ -121,7 +117,6 @@ export function SessionView() {
           setFollowMode={setFollowMode}
           missingToolResultCount={missingToolResultCount}
           skippedLines={session.skippedLines}
-          streamError={streamError}
           messagesEndRef={messagesEndRef}
         />
       </div>

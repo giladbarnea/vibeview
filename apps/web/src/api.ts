@@ -33,21 +33,6 @@ export function authHeaders(extra?: HeadersInit): Headers {
   return headers;
 }
 
-// Establish the SSE auth cookie via a header-authenticated handshake. EventSource
-// cannot send the Authorization header, so the server sets an HttpOnly cookie
-// that the stream request carries automatically. Cached so we handshake once.
-let streamAuth: Promise<void> | null = null;
-export function ensureStreamAuth(): Promise<void> {
-  if (!accessToken) return Promise.resolve();
-  if (!streamAuth) {
-    streamAuth = fetch('/api/auth/stream', {
-      method: 'POST',
-      headers: authHeaders(),
-    }).then(() => undefined);
-  }
-  return streamAuth;
-}
-
 export async function fetcher<T>(url: string): Promise<T> {
   const res = await fetch(url, { headers: authHeaders() });
   if (!res.ok) {

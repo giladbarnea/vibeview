@@ -1,14 +1,7 @@
-import { useMemo, useEffect } from 'react';
-import useSWR from 'swr';
+import { useMemo } from 'react';
+import useSWRImmutable from 'swr/immutable';
 import { fetcher } from '../api';
-import type {
-  ActivityState,
-  SessionDetail,
-  ContentBlock,
-  MessageResponse,
-  UsageTotals,
-} from '../types';
-import { useSessionStream } from './useSessionStream';
+import type { SessionDetail, ContentBlock, MessageResponse } from '../types';
 import { isHiddenMessage } from '../lib/messageVisibility';
 
 export function buildToolResultMap(messages: MessageResponse[]): Map<string, ContentBlock> {
@@ -26,29 +19,21 @@ export function buildToolResultMap(messages: MessageResponse[]): Map<string, Con
   return map;
 }
 
+/**
+ * The session as one snapshot per browser document. It is fetched on the first
+ * view and reused for every later view of the same session: focus, reconnect and
+ * remounting never refetch, and nothing is streamed in. A full page reload starts
+ * a new document and reads the session file again.
+ */
 export function useSessionData(id: string | undefined) {
   const {
     data: session,
     error,
     isLoading,
     mutate,
-  } = useSWR<SessionDetail>(id ? `/api/sessions/${id}` : null, fetcher);
+  } = useSWRImmutable<SessionDetail>(id ? `/api/sessions/${id}` : null, fetcher);
 
-  const { streamedMessages, connectionStatus, streamError, serverActivityState, addInitialUUIDs } =
-    useSessionStream(id);
-
-  // Register initial message UUIDs so the SSE hook deduplicates.
-  useEffect(() => {
-    if (session) {
-      addInitialUUIDs(session.messages.map((m) => m.uuid));
-    }
-  }, [session, addInitialUUIDs]);
-
-  // Combine fetched + streamed messages.
-  const allMessages = useMemo(() => {
-    if (!session) return [];
-    return [...session.messages, ...streamedMessages];
-  }, [session, streamedMessages]);
+  const allMessages = useMemo(() => session?.messages ?? [], [session]);
 
   const { toolResults, missingToolResultCount } = useMemo(() => {
     const results = buildToolResultMap(allMessages);
@@ -66,39 +51,6 @@ export function useSessionData(id: string | undefined) {
     }
     return { toolResults: results, missingToolResultCount: missing };
   }, [allMessages]);
-
-  // Aggregate usage: session totals + any new streamed assistant messages.
-  const liveUsage = useMemo<UsageTotals | null>(() => {
-    if (!session) return null;
-    const base = { ...session.usage };
-    for (const msg of streamedMessages) {
-      if (msg.type === 'assistant' && msg.message?.usage) {
-        const u = msg.message.usage;
-        base.inputTokens += u.input_tokens;
-        base.outputTokens += u.output_tokens;
-        base.cacheCreationInputTokens += u.cache_creation_input_tokens;
-        base.cacheReadInputTokens += u.cache_read_input_tokens;
-        base.costUSD += u.costUSD ?? 0;
-      }
-    }
-    return base;
-  }, [session, streamedMessages]);
-
-  // Derive live custom title from streamed custom-title events.
-  const liveCustomTitle = useMemo(() => {
-    for (let i = streamedMessages.length - 1; i >= 0; i--) {
-      const msg = streamedMessages[i];
-      if (msg.type === 'custom-title' && msg.customTitle) {
-        return msg.customTitle;
-      }
-    }
-    return null;
-  }, [streamedMessages]);
-
-  // Activity state is derived entirely by the backend. The server pushes it
-  // both on each SSE message event and via dedicated activity_state events
-  // (idle decay / process liveness checks).
-  const liveActivityState: ActivityState | undefined = serverActivityState ?? undefined;
 
   // Use API-provided insights when available.
   const insights = session?.insights ?? null;
@@ -136,15 +88,9 @@ export function useSessionData(id: string | undefined) {
     error,
     isLoading,
     mutate,
-    streamedMessages,
-    connectionStatus,
-    streamError,
     allMessages,
     toolResults,
     missingToolResultCount,
-    liveUsage,
-    liveCustomTitle,
-    liveActivityState,
     displayMessages,
     insights,
     timeline,
