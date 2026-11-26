@@ -2,7 +2,7 @@ import { memo, useState, type ReactNode } from 'react';
 import Markdown, { type Components } from 'react-markdown';
 import { TextSegment } from '../MessageContent';
 import type { Segment, TreeNode } from './trackItems';
-import { COLUMN_CLASS, ROW_LAYOUT, TREE_INDENT, toolContentIndent, toolRowIndent } from './columns';
+import { COLUMN_CLASS, ROW_LAYOUT, TREE_INDENT, toolRowIndent } from './columns';
 import { formatTokenCount } from '../../utils';
 
 /** A context window's boundary line; clicking it collapses or expands the window's rows. */
@@ -98,7 +98,7 @@ function TreeRow({ node, depth }: { node: TreeNode; depth: number }) {
     ));
   else if (open)
     expansion = (
-      <div className="relative mb-1" style={{ marginLeft: toolContentIndent(depth) }}>
+      <div className="relative mb-1" style={{ marginLeft: toolRowIndent(depth) }}>
         <pre className="max-h-[60vh] overflow-auto whitespace-pre-wrap break-words rounded bg-surface-dim/60 px-3 py-2 pr-8 font-mono text-[11px]">
           {node.body}
         </pre>
@@ -113,9 +113,6 @@ function TreeRow({ node, depth }: { node: TreeNode; depth: number }) {
         className="flex w-full items-center gap-2 border-b border-border/30 bg-surface-dim/30 py-1 pr-8 text-left hover:bg-primary/5"
         style={{ paddingLeft: toolRowIndent(depth) }}
       >
-        <span className="material-symbols-outlined flex-none text-[14px] text-muted-fg">
-          {open ? 'expand_more' : 'chevron_right'}
-        </span>
         <span className={`flex-none font-mono text-[11px] ${node.isError ? 'text-destructive' : ''}`}>
           {node.label}
         </span>

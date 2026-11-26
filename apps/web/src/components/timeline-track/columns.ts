@@ -20,21 +20,11 @@ export const PROMPT_COLUMN_LEFT = 88;
 /** How far each tree level (assistant row, tool call, input/output) indents past its parent, in px. */
 export const TREE_INDENT = 24;
 
-/** Width of a tool row's expand arrow (a 24px icon box) plus the 8px gap after it, in px. */
-const ARROW_WIDTH = 32;
-
-/** The chevron glyph's blank margin inside its 24px icon box, in px. */
-const ARROW_BEARING = 9;
-
 /**
- * Left padding of a tool row at `depth` (0 = a tool call, 1 = its input/output):
- * the visible chevron of a tool call starts where its assistant row's text does.
+ * Left edge of a tool row's label at `depth` (0 = a tool call, 1 = its
+ * input/output); a tool call starts where its assistant row's text does, and
+ * opened content lines up with the label.
  */
 export function toolRowIndent(depth: number): number {
-  return PROMPT_COLUMN_LEFT + TREE_INDENT * (depth + 1) - ARROW_BEARING;
-}
-
-/** Left margin of a tool row's opened content, aligned with the row's label. */
-export function toolContentIndent(depth: number): number {
-  return toolRowIndent(depth) + ARROW_WIDTH;
+  return PROMPT_COLUMN_LEFT + TREE_INDENT * (depth + 1);
 }
