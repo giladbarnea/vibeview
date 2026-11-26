@@ -7,8 +7,8 @@
 export const COLUMN_CLASS = {
   number: 'w-[36px] flex-none',
   prompt: 'flex-1 min-w-0',
-  elapsed: 'w-[56px] flex-none text-right whitespace-nowrap',
-  tokens: 'w-[88px] flex-none text-right',
+  elapsed: 'w-[54px] flex-none text-right whitespace-nowrap',
+  tokens: 'w-[40px] flex-none text-right whitespace-nowrap',
 } as const;
 
 /** Shared horizontal layout (flex, gap, padding) for the header and every row. */
