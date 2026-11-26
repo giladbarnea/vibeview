@@ -134,8 +134,8 @@ function TreeRow({ node, depth }: { node: TreeNode; depth: number }) {
 }
 
 /**
- * A top-level row for one assistant text message. Open, it shows the full text,
- * stays pinned while its tool calls scroll past, and lists those calls below.
+ * A top-level row for one assistant text message. Open, the one-line row stays
+ * pinned while the full text and the tool calls below it scroll past.
  */
 /** Memoized: re-renders only when its props change, so a selection or toggle repaints just the affected rows. */
 export const AssistantRow = memo(function AssistantRow({
@@ -150,7 +150,7 @@ export const AssistantRow = memo(function AssistantRow({
   onToggle: (key: string) => void;
 }) {
   const toolCount = segment.nodes.length;
-  // Selecting text in an open message must not close it.
+  // Selecting text must not close the row.
   const toggleUnlessSelecting = () => {
     if (window.getSelection()?.toString()) return;
     onToggle(segment.key);
@@ -169,17 +169,27 @@ export const AssistantRow = memo(function AssistantRow({
         <span className={`${COLUMN_CLASS.elapsed} text-right font-mono text-[10px] text-muted-fg`}>
           {toolCount === 0 ? '' : `${toolCount} tool${toolCount === 1 ? '' : 's'}`}
         </span>
-        <div
-          className={`${COLUMN_CLASS.prompt} ${open ? 'max-h-[30vh] overflow-y-auto' : 'truncate font-mono text-[11.5px] text-muted-fg'}`}
-        >
-          {segment.text === undefined && <span className="italic">(no text reply)</span>}
-          {segment.text !== undefined &&
-            (open ? <TextSegment content={segment.text} variant="assistant" /> : <InlineMarkdown text={segment.text} />)}
+        <div className={`${COLUMN_CLASS.prompt} truncate font-mono text-[11.5px] text-muted-fg`}>
+          {segment.text === undefined ? (
+            <span className="italic">(no text reply)</span>
+          ) : (
+            <InlineMarkdown text={segment.text} />
+          )}
         </div>
         <span className={`${COLUMN_CLASS.tokens} text-right font-mono text-[10px] text-muted-fg`}>
           {formatTokenCount(segment.tokens)}
         </span>
       </div>
+      {open && segment.text !== undefined && (
+        <div className={`${ROW_LAYOUT} border-b border-border/30 py-2`}>
+          <span className={COLUMN_CLASS.number} />
+          <span className={COLUMN_CLASS.elapsed} />
+          <div className={COLUMN_CLASS.prompt}>
+            <TextSegment content={segment.text} variant="assistant" />
+          </div>
+          <span className={COLUMN_CLASS.tokens} />
+        </div>
+      )}
       {open && segment.nodes.map((node) => <TreeRow key={node.key} node={node} depth={0} />)}
     </div>
   );
