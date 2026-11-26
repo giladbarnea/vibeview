@@ -49,10 +49,10 @@ function PromptSubline({ skills, commands }: { skills: string[]; commands: strin
 }
 
 /**
- * One exchange's prompt as a clickable row: message number, elapsed time,
- * the right-aligned prompt (+ optional skill/command subline), and the prompt's
- * own estimated token count. Clicking selects it and opens its full text as
- * markdown, a left-aligned block pushed to the right edge of the cell.
+ * One exchange's prompt as a clickable row: message number, elapsed time, the
+ * prompt (+ optional skill/command subline), and the prompt's own estimated
+ * token count. A faint band sets prompts apart from the assistant's rows.
+ * Clicking selects it and opens its full text as markdown.
  */
 export const TrackRow = memo(function TrackRow({
   rowKey,
@@ -90,7 +90,7 @@ export const TrackRow = memo(function TrackRow({
       style={selected ? { boxShadow: 'inset 3px 0 0 var(--primary)' } : undefined}
       className={`${ROW_LAYOUT} w-full cursor-pointer border-b border-border/60 text-left hover:bg-primary/5 ${
         density === 'compact' ? 'py-2' : 'py-3'
-      } ${selected ? 'bg-primary/10' : ''}`}
+      } ${selected ? 'bg-primary/10' : 'bg-secondary/50'}`}
     >
       <span className={`${COLUMN_CLASS.number} font-mono text-[10px] text-muted-fg`}>
         {messageNumber}
@@ -102,13 +102,13 @@ export const TrackRow = memo(function TrackRow({
       </span>
 
       {/* Prompt */}
-      <div className={`${COLUMN_CLASS.prompt} flex flex-col items-end gap-0.5`}>
+      <div className={`${COLUMN_CLASS.prompt} flex flex-col gap-0.5`}>
         {open && promptText !== undefined ? (
-          <div className="max-w-full text-left">
+          <div>
             <TextSegment content={promptText} variant="assistant" />
           </div>
         ) : (
-          <span className="line-clamp-2 text-right font-mono text-[11.5px]" title={promptPreview}>
+          <span className="line-clamp-2 font-mono text-[11.5px]" title={promptPreview}>
             {promptSource && (
               <span className="mr-2 rounded-[3px] bg-secondary px-[5px] py-px text-[10px] text-muted-fg">
                 {promptSource}
