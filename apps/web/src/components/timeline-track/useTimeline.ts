@@ -5,7 +5,7 @@ import { EMPTY_FILTERS, type FilterState, type TimelineFilterKey } from './chips
 
 interface UseTimelineOptions {
   timeline: TimelineResponse | null;
-  /** The selected exchange index (owned by the parent for the detail panel), or null. */
+  /** The selected exchange index (owned by the parent), or null. */
   selectedIndex: number | null;
   onSelectIndex: (index: number) => void;
 }

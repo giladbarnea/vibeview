@@ -6,7 +6,6 @@ import type { TimelineController } from '../components/timeline-track/useTimelin
 import type {
   ActivityState,
   ContentBlock,
-  Exchange,
   MessageResponse,
   TimelineResponse,
 } from '../types';
@@ -43,12 +42,6 @@ interface SessionTabContentProps {
 
 /** The scrolling body under the header: the Timeline track or the conversation. */
 export function SessionTabContent(props: SessionTabContentProps) {
-  const openInConversation = (exchange: Exchange) => {
-    props.setTab('conversation');
-    const firstUuid = exchange.messageUuids[0];
-    if (firstUuid) props.navigateToMessage(firstUuid);
-  };
-
   if (props.tab === 'timeline') {
     return (
       <div className="flex flex-1 flex-col overflow-hidden px-4 sm:px-8">
@@ -56,8 +49,6 @@ export function SessionTabContent(props: SessionTabContentProps) {
           <TimelineTab
             timeline={props.timeline}
             controller={props.controller}
-            onClose={() => props.setSelectedExchangeIndex(null)}
-            onOpenInConversation={openInConversation}
             messageContext={{
               messages: props.displayMessages,
               toolResults: props.toolResults,

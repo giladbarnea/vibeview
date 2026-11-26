@@ -2,11 +2,11 @@
 
 A local CLI tool for browsing your Claude Code sessions in a clean, read-only web interface.
 
-> **This fork** (of [driangle/vibeview](https://github.com/driangle/vibeview)) also views [Pi](https://pi.dev) sessions. Its session page is the Timeline table alone: prompts and assistant messages as rows, tool calls as expandable `input -> output` sub-rows, per-row token estimates, collapsible context-window boundaries with a jump list, and a find bar (Cmd/Ctrl+F) that also searches inside closed rows and tool calls. The session page is a snapshot taken when the page loads; reload the page to see changes to the file. See [Viewing Pi sessions](#viewing-pi-sessions).
+> **This fork** of [driangle/vibeview](https://github.com/driangle/vibeview) also views [Pi](https://pi.dev) sessions and shows each session as a timeline table. What differs from upstream, and why: [FORK.md](FORK.md).
 
 [Documentation](https://driangle.github.io/vibeview/)
 
-vibeview watches your `~/.claude` directory, discovers sessions in real time, and presents them as a browsable chat UI with tool calls, file edits, thinking blocks, and cost breakdowns.
+vibeview watches your `~/.claude` directory, discovers sessions in real time, and presents each one as a timeline table of prompts, replies and tool calls.
 
 ![Sessions list](apps/docs/public/images/sessions-list.png)
 
@@ -164,27 +164,27 @@ vibeview sessions --dir myproject --json
 
 ## Viewing Pi sessions
 
-Convert the Pi session, then open the result. The output must sit inside the directory passed to `--claude-dir`.
+Convert the Pi session, then open the result. The output must sit inside the directory passed to `--claude-dir`, and that directory must exist.
 
 ```sh
+mkdir -p /tmp/pi-view
 uv run scripts/pi_to_vibeview.py ~/.pi/agent/sessions/<project>/<session>.jsonl /tmp/pi-view/session.jsonl
-vibeview --claude-dir /tmp/pi-view web /tmp/pi-view/session.jsonl
+vibeview --claude-dir /tmp/pi-view web --open /tmp/pi-view/session.jsonl
 ```
 
 The converter reads the session's active branch. A run of context edits, or a compaction, starts a new context window. It never writes the source session: it refuses a destination that is the source file itself, including through a symlink or hard link. The converted file is a one-time copy, so to see newer messages, rerun the converter and reload the page.
 
 ## Web UI
 
-### Session detail
+### Session page
 
-A read-only chat view with messages, tool calls, thinking blocks, and diffs, plus a
-sidebar summarizing files touched, tool usage, skills, subagents, and errors.
+A read-only timeline table, read once when the page loads; reload the page to see changes to the file.
 
-![Session detail](apps/docs/public/images/sessions-detail.png)
-
-Tool calls expand inline to show their input and result:
-
-![Expanded tool calls](apps/docs/public/images/tool-calls.png)
+- Prompts and the assistant's replies are rows. A reply opens to its full text and to the tool calls that led up to it; each tool call reads `input -> output` and opens to its full input and output.
+- Each row shows an estimate of its size in tokens; prompts also show how long their turn took. Day headings separate the days.
+- Context-window boundaries show the window's largest context size and what started it. Each collapses its window, and a numbered list beside the table jumps to one.
+- Cmd/Ctrl+F opens a find bar that also searches closed rows and tool calls; Enter and Shift+Enter step through the matches.
+- `j`/`k` or ↑/↓ select a prompt; Enter or → opens it with its replies, and ← closes them.
 
 ### Activity
 
@@ -198,7 +198,7 @@ Contribution graph, hourly patterns, and usage trends across all your sessions.
 - **Directories** -- sessions grouped by project
 - **Settings** -- theme, sort order, page size, cost display, custom model pricing
 
-Live sessions update in real time via SSE. See the
+The sessions list refreshes on its own; a session page does not. See the
 [web interface guide](https://driangle.github.io/vibeview/guide/web-interface) for more.
 
 ## Claude Code Plugin

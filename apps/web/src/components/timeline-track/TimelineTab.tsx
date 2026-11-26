@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { Exchange, TimelineResponse } from '../../types';
+import type { TimelineResponse } from '../../types';
 import { buildTrackItems } from './trackItems';
 import { NO_MATCHES, buildSearchIndex, findMatches } from './search';
 import { SearchBar } from './SearchBar';
@@ -13,10 +13,6 @@ interface TimelineTabProps {
   timeline: TimelineResponse | null;
   /** The shared timeline state and actions; owned by the parent (see {@link useTimeline}). */
   controller: TimelineController;
-  /** Clears the selection, closing the detail panel. */
-  onClose?: () => void;
-  /** Switch to the Conversation tab, jumping to the given exchange (best-effort). */
-  onOpenInConversation?: (exchange: Exchange) => void;
   /**
    * Session messages + maps used to build the assistant rows under each prompt.
    */
@@ -25,10 +21,9 @@ interface TimelineTabProps {
 }
 
 /**
- * The Timeline tab: composes the toolbar, the overview strip, the track, and the
- * detail panel, plus the scoped keyboard navigation. All timeline state (query,
- * filters, selection, visible exchanges) lives in the shared
- * {@link TimelineController} so the sidebar's insights can drive the same track.
+ * The Timeline tab: builds the track's rows, owns which rows are open and which
+ * windows are collapsed, and adds the find bar and keyboard navigation. The
+ * selection and visible exchanges live in the shared {@link TimelineController}.
  */
 export function TimelineTab({
   controller,
