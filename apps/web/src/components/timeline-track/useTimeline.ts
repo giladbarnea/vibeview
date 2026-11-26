@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import type { Exchange, TimelineResponse } from '../../types';
 import { filterExchanges } from './filterExchanges';
-import { EMPTY_FILTERS, anyFilterActive, type FilterState, type TimelineFilterKey } from './chips';
+import { EMPTY_FILTERS, type FilterState, type TimelineFilterKey } from './chips';
 
 interface UseTimelineOptions {
   timeline: TimelineResponse | null;
@@ -38,8 +38,6 @@ export interface TimelineController {
   matched: number;
   /** Position of the selection within the visible list, or -1. */
   matchPos: number;
-  /** Whether idle gaps should be drawn (no active query or filter). */
-  showIdleGaps: boolean;
   selectedIndex: number | null;
   onSelectIndex: (index: number) => void;
   /** The currently selected exchange, or undefined. */
@@ -74,7 +72,6 @@ export function useTimeline({
     selectedIndex === null ? -1 : visible.findIndex((e) => e.index === selectedIndex);
   const matchLabel = matched === 0 ? '0 results' : `${Math.max(0, matchPos) + 1}/${matched}`;
 
-  const showIdleGaps = query.trim().length === 0 && !anyFilterActive(filters);
 
   const toggleFilter = useCallback(
     (key: TimelineFilterKey) => setFilters((prev) => ({ ...prev, [key]: !prev[key] })),
@@ -143,7 +140,6 @@ export function useTimeline({
     matchLabel,
     matched,
     matchPos,
-    showIdleGaps,
     selectedIndex,
     onSelectIndex,
     selectedExchange,

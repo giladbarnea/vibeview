@@ -11,13 +11,6 @@
  */
 export const LONG_EXCHANGE_MS = 2 * 60 * 1000;
 
-/**
- * The minimum idle gap before an exchange that surfaces an idle divider. Gaps
- * shorter than this (the seconds between rapid back-to-back exchanges) are left
- * out so the track stays readable.
- */
-export const IDLE_DIVIDER_MIN_MS = 30 * 1000;
-
 /** Format an ISO timestamp as a local `HH:MM` clock; `''` for empty/invalid input. */
 export function formatTimeOfDay(iso: string): string {
   if (!iso) return '';

@@ -1,7 +1,6 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import type { Exchange, TimelineResponse } from '../../types';
-import { exchangeItems, isSegment } from './ExchangeTree';
-import { resolveExchangeMessages } from './exchangeData';
+import { buildTrackItems } from './trackItems';
 import { TimelineTrack } from './TimelineTrack';
 import { useTimelineKeyboard } from './useTimelineKeyboard';
 import type { TimelineController } from './useTimeline';
@@ -30,7 +29,6 @@ interface TimelineTabProps {
  * {@link TimelineController} so the sidebar's insights can drive the same track.
  */
 export function TimelineTab({
-  timeline,
   controller,
   messageContext,
   density,
@@ -40,7 +38,6 @@ export function TimelineTab({
     visible,
     clearSearch,
     reset,
-    showIdleGaps,
     selectedIndex,
     onSelectIndex,
   } = controller;
@@ -55,13 +52,20 @@ export function TimelineTab({
       }),
     [],
   );
+  const messages = messageContext?.messages;
+  const toolResults = messageContext?.toolResults;
+  const items = useMemo(
+    () => buildTrackItems(visible, messages ?? [], toolResults ?? new Map()),
+    [visible, messages, toolResults],
+  );
+  /** Opens or closes the assistant rows between a prompt row and the next one. */
   const setExchangeOpen = (index: number, open: boolean) => {
-    const exchange = allExchanges.find((e) => e.index === index);
-    if (!exchange || !messageContext) return;
-    const exchangeMessages = resolveExchangeMessages({ exchange, messages: messageContext.messages });
-    const keys = exchangeItems(exchangeMessages, messageContext.toolResults)
-      .filter(isSegment)
-      .map((segment) => segment.key);
+    const start = items.findIndex((item) => item.kind === 'prompt' && item.exchange.index === index);
+    const keys: string[] = [];
+    for (const item of items.slice(start + 1)) {
+      if (item.kind === 'prompt') break;
+      if (item.kind === 'segment') keys.push(item.key);
+    }
     setOpenSegments((previous) => {
       const next = new Set(previous);
       for (const key of keys) {
@@ -86,14 +90,12 @@ export function TimelineTab({
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex min-h-0 flex-1">
         <TimelineTrack
-          timeline={timeline}
-          visibleExchanges={visible}
-          showIdleGaps={showIdleGaps}
+          items={items}
+          empty={visible.length === 0}
           selectedIndex={selectedIndex}
           onSelectIndex={onSelectIndex}
           density={density}
           onReset={reset}
-          messageContext={messageContext}
           openSegments={openSegments}
           onToggleSegment={toggleSegment}
         />

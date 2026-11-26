@@ -186,20 +186,22 @@ func (m *Message) UnmarshalJSON(data []byte) error {
 
 // APIMessage represents the inner message field on user/assistant messages.
 type APIMessage struct {
-	Role    string         `json:"role"`
-	Model   string         `json:"model,omitempty"`
-	Content []ContentBlock `json:"content"`
-	Usage   *Usage         `json:"usage,omitempty"`
+	Role       string         `json:"role"`
+	Model      string         `json:"model,omitempty"`
+	Content    []ContentBlock `json:"content"`
+	Usage      *Usage         `json:"usage,omitempty"`
+	StopReason string         `json:"stop_reason,omitempty"` // why an assistant call ended: tool_use means the turn continues
 }
 
 // UnmarshalJSON handles content being either a []ContentBlock or a plain string.
 func (m *APIMessage) UnmarshalJSON(data []byte) error {
 	// Use an alias to avoid infinite recursion.
 	type apiMessageRaw struct {
-		Role    string          `json:"role"`
-		Model   string          `json:"model,omitempty"`
-		Content json.RawMessage `json:"content"`
-		Usage   *Usage          `json:"usage,omitempty"`
+		Role       string          `json:"role"`
+		Model      string          `json:"model,omitempty"`
+		Content    json.RawMessage `json:"content"`
+		Usage      *Usage          `json:"usage,omitempty"`
+		StopReason string          `json:"stop_reason,omitempty"`
 	}
 	var raw apiMessageRaw
 	if err := json.Unmarshal(data, &raw); err != nil {
@@ -208,6 +210,7 @@ func (m *APIMessage) UnmarshalJSON(data []byte) error {
 	m.Role = raw.Role
 	m.Model = raw.Model
 	m.Usage = raw.Usage
+	m.StopReason = raw.StopReason
 
 	if len(raw.Content) == 0 {
 		return nil

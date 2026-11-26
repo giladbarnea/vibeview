@@ -77,6 +77,8 @@ export interface APIMessage {
   model?: string;
   content: ContentBlock[] | string;
   usage?: Usage;
+  /** Why an assistant call ended; `tool_use` means the turn continues. */
+  stop_reason?: string;
 }
 
 export interface ChannelInfo {

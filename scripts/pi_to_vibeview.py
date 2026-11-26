@@ -53,6 +53,8 @@ previous = None
 window = 1
 pending_edits = 0
 pending_compaction = False
+# Pi's stop reason, in Claude Code's terms. tool_use means the turn continues past this call.
+STOP_REASONS = {"toolUse": "tool_use", "stop": "end_turn", "length": "max_tokens", "error": "error", "aborted": "aborted"}
 for entry in branch:
     if entry["type"] == "context_edit":
         pending_edits += 1
@@ -66,12 +68,10 @@ for entry in branch:
     role = message and message["role"]
     if role == "user":
         record |= {"type": "user", "message": {"role": "user", "content": text_blocks(message["content"])}}
-    elif role == "assistant" and not message["content"]:
-        continue  # a failed model call (rate limit, abort): no content, and it must not split a run of context edits
     elif role == "assistant":
         usage = message.get("usage", {})
         record |= {"type": "assistant", "message": {"role": "assistant", "model": message.get("model"),
-                   "content": assistant_blocks(message["content"]),
+                   "content": assistant_blocks(message["content"]), "stop_reason": STOP_REASONS[message["stopReason"]],
                    "usage": {"input_tokens": usage.get("input", 0), "output_tokens": usage.get("output", 0),
                              "cache_read_input_tokens": usage.get("cacheRead", 0), "cache_creation_input_tokens": usage.get("cacheWrite", 0)}}}
     elif role == "toolResult":
@@ -83,8 +83,10 @@ for entry in branch:
         record |= {"type": "user", "isMeta": True, "message": {"role": "user", "content": text_blocks(content if content else json.dumps(entry)[:2000])}}
     else:
         continue
-    # Pi extension messages are hidden in the timeline, so they must not split a run of context edits either.
-    if (pending_edits or pending_compaction) and not record.get("isMeta"):
+    # Neither a failed model call (no content: rate limit, abort) nor a Pi extension message (hidden in
+    # the timeline) splits a run of context edits. The failed call is still kept: it marks where a turn ended.
+    failed_call = record["type"] == "assistant" and not record["message"]["content"]
+    if (pending_edits or pending_compaction) and not record.get("isMeta") and not failed_call:
         window += 1
         marker_id = f"window-{window}"
         out.append({"uuid": marker_id, "parentUuid": previous, "timestamp": entry["timestamp"],
